@@ -153,21 +153,23 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, n := suggestHead(repoInfo, refsInfo)
 
-	switch t {
-	case refs.TYPE_TAG:
-		log.Info("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
-	case refs.TYPE_BRANCH:
-		log.Info("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
-	default:
-		log.Warn("%s -> master (tag/branch not found)", path)
-	}
-
 	// Rewrite refs
 	if repoInfo.Path == "info/refs" {
+		switch t {
+		case refs.TYPE_TAG:
+			log.Info("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
+		case refs.TYPE_BRANCH:
+			log.Info("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
+		default:
+			log.Warn("%s -> master (tag/branch not found)", path)
+		}
+
 		stats.Hits++
+
 		appendProcHeader(w, start)
 		w.Header().Set("Content-Type", "application/x-git-upload-pack-advertisement")
 		w.Write(refsInfo.Rewrite(n, t))
+
 		return
 	}
 
