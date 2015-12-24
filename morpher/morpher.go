@@ -16,13 +16,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/essentialkaos/ek/knf"
-	"github.com/essentialkaos/ek/log"
-	"github.com/essentialkaos/ek/req"
-	"github.com/essentialkaos/ek/sortutil"
-	"github.com/essentialkaos/ek/version"
+	"pkg.re/essentialkaos/ek.v1/knf"
+	"pkg.re/essentialkaos/ek.v1/log"
+	"pkg.re/essentialkaos/ek.v1/req"
+	"pkg.re/essentialkaos/ek.v1/sortutil"
+	"pkg.re/essentialkaos/ek.v1/version"
 
-	"github.com/essentialkaos/librato"
+	"pkg.re/essentialkaos/librato.v1"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
@@ -228,6 +228,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	resp, err := req.Request{
 		URL:         "https://" + repo.GitHubRoot() + ".git/info/refs?service=git-upload-pack",
 		AutoDiscard: true,
+		Close:       true,
 	}.Get()
 
 	if err != nil {
