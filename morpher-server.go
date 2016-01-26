@@ -14,16 +14,16 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/essentialkaos/ek/arg"
-	"github.com/essentialkaos/ek/fmtc"
-	"github.com/essentialkaos/ek/fsutil"
-	"github.com/essentialkaos/ek/knf"
-	"github.com/essentialkaos/ek/log"
-	"github.com/essentialkaos/ek/req"
-	"github.com/essentialkaos/ek/signal"
-	"github.com/essentialkaos/ek/usage"
+	"pkg.re/essentialkaos/ek.v1/arg"
+	"pkg.re/essentialkaos/ek.v1/fmtc"
+	"pkg.re/essentialkaos/ek.v1/fsutil"
+	"pkg.re/essentialkaos/ek.v1/knf"
+	"pkg.re/essentialkaos/ek.v1/log"
+	"pkg.re/essentialkaos/ek.v1/req"
+	"pkg.re/essentialkaos/ek.v1/signal"
+	"pkg.re/essentialkaos/ek.v1/usage"
 
-	"github.com/essentialkaos/librato"
+	"pkg.re/essentialkaos/librato.v1"
 
 	"github.com/essentialkaos/pkgre/morpher"
 )
@@ -32,7 +32,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "0.1.0"
+	VER  = "0.1.4"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -82,8 +82,6 @@ var argMap = arg.Map{
 	ARG_HELP:     &arg.V{Type: arg.BOOL, Alias: "u:usage"},
 	ARG_VER:      &arg.V{Type: arg.BOOL, Alias: "ver"},
 }
-
-var versionRegExp = regexp.MustCompile(`^[a-zA-Z]{0,}([0-9.]{1,})`)
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 

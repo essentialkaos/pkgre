@@ -8,6 +8,7 @@ package morpher
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -145,7 +146,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		stats.Errors++
-		log.Warn("Can't fetch refs data: %v", err)
+		log.Warn("Can't process refs data for %s: %v", repoInfo.GitHubRoot(), err)
 		appendProcHeader(w, start)
 		notFoundResponse(w, err.Error())
 		return
@@ -155,13 +156,17 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Rewrite refs
 	if repoInfo.Path == "info/refs" {
-		switch t {
-		case refs.TYPE_TAG:
-			log.Info("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
-		case refs.TYPE_BRANCH:
-			log.Info("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
-		default:
-			log.Warn("%s -> master (tag/branch not found)", path)
+		if n != "" {
+			switch t {
+			case refs.TYPE_TAG:
+				log.Info("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
+			case refs.TYPE_BRANCH:
+				log.Info("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
+			default:
+				log.Warn("%s -> master (proper tag/branch not found)", path)
+			}
+		} else {
+			log.Info("%s -> master (no target version)", path)
 		}
 
 		stats.Hits++
@@ -239,6 +244,10 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("Can't read GitHub response: %s", err.Error())
+	}
+
+	if len(refsData) == 0 {
+		return nil, errors.New("GitHub return empty response")
 	}
 
 	refs, err := refs.Parse(refsData)

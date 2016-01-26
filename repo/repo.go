@@ -108,11 +108,17 @@ func (i *Info) GitHubRoot() string {
 }
 
 func (i *Info) Root() string {
-	if i.User == "" {
-		return i.Name + "." + i.Target
+	var target = ""
+
+	if i.Target != "" {
+		target = "." + i.Target
 	}
 
-	return i.User + "/" + i.Name + "." + i.Target
+	if i.User == "" {
+		return i.Name + target
+	}
+
+	return i.User + "/" + i.Name + target
 }
 
 func (i *Info) FullPath() string {

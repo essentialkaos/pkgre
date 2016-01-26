@@ -100,6 +100,11 @@ func (r *Info) GetBranchSHA(name string, short bool) string {
 
 // Rewrite return refs with updated head
 func (r *Info) Rewrite(headName string, headType RefType) []byte {
+	// If head name is empty we return unchanged refs
+	if headName == "" {
+		return []byte(strings.Join(r.raw, "\n"))
+	}
+
 	var (
 		buf     bytes.Buffer
 		refName string
@@ -143,11 +148,6 @@ func (r *Info) Rewrite(headName string, headType RefType) []byte {
 // Parse parse data and return refs struct and error
 func Parse(data []byte) (*Info, error) {
 	strDataSlice := strings.Split(string(data[:]), "\n")
-
-	// Looks like we got error message
-	if len(strDataSlice) == 1 {
-		return nil, errors.New(strDataSlice[0])
-	}
 
 	// Well formated refs data must contains 3 or more lines
 	if len(strDataSlice) <= 3 {
