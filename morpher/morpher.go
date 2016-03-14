@@ -199,9 +199,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	stats.Redirects++
 
-	// Redirect to viewer
+	// Redirect to github
 	appendProcHeader(w, start)
-	redirectRequest(w, "https://pkg.re/#/"+repoInfo.FullPath())
+	redirectRequest(w, repoInfo.GitHubURL(n))
 }
 
 // notFoundResponse write 404 response

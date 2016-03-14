@@ -99,6 +99,7 @@ func ParsePath(path string) (*Info, error) {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// GitHubRoot return github root path e.g. github.com/user/project
 func (i *Info) GitHubRoot() string {
 	if i.User == "" {
 		return "github.com/go-" + i.Name + "/" + i.Name
@@ -107,6 +108,22 @@ func (i *Info) GitHubRoot() string {
 	return "github.com/" + i.User + "/" + i.Name
 }
 
+// GitHubURL return url of repository on github
+func (i *Info) GitHubURL(branchOrName string) string {
+	url := "https://" + i.GitHubRoot()
+
+	if branchOrName != "" {
+		url += "/tree/" + branchOrName
+	}
+
+	if i.Path != "" {
+		url += "/" + i.Path
+	}
+
+	return url
+}
+
+// Root return root path for some repo e.g. user/project.target
 func (i *Info) Root() string {
 	var target = ""
 
@@ -121,6 +138,7 @@ func (i *Info) Root() string {
 	return i.User + "/" + i.Name + target
 }
 
+// FullPath return full path e.g. user/project.target/some/part
 func (i *Info) FullPath() string {
 	if i.Path != "" {
 		return i.Root() + "/" + i.Path

@@ -10,7 +10,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -32,7 +31,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "0.1.4"
+	VER  = "0.1.5"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
