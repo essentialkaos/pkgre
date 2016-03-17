@@ -1,0 +1,12 @@
+/var/log/pkgre/morpher.log {
+    weekly
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    sharedscripts
+    postrotate
+        [ -f /var/run/pkgre/morpher.pid ] && kill -HUP `cat /var/run/pkgre/morpher.pid`
+    endscript
+}

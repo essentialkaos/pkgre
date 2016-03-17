@@ -1,0 +1,80 @@
+#!/bin/bash
+
+###############################################################################
+
+# morpher         Startup script for morpher daemon (part of pkg.re service)
+
+# chkconfig: - 85 15
+# processname: morpher
+# config: /etc/morpher.conf
+# pidfile: /var/run/mockka/morpher.pid
+# description: Morpher Daemon
+
+###############################################################################
+
+source /etc/init.d/kaosv
+
+###############################################################################
+
+kv[prog_name]="morpher"
+kv[search_pattern]="morpher-server"
+
+binary="/usr/bin/morpher-server"
+conf_file="/etc/morpher.conf"
+
+kv[user]="morpher"
+kv[pid_dir]="/var/run/pkgre/morpher"
+
+###############################################################################
+
+kv.addHandler "start" "startServiceHandler"
+kv.addHandler "stop"  "stopServiceHandler"
+
+###############################################################################
+
+prepare() {
+  local has_errors=""
+
+  [[ ! -x $binary ]] && has_errors=true && kv.error "<BINARY> must be executable file."
+  [[ ! -r $conf_file ]] && has_errors=true && kv.error "<CONF_FILE> must be readable file."
+  [[ ! -s $conf_file ]] && has_errors=true && kv.error "<CONF_FILE> can't be empty."
+
+  [[ $has_errors ]] && kv.exit $ACTION_ERROR
+}
+
+###############################################################################
+
+startServiceHandler() {
+  
+  kv.daemonize $binary -c $conf_file
+
+  [[ $? -ne $ACTION_OK ]] && return $ACTION_ERROR
+
+  sleep 1
+
+  kv.getStartStatus
+
+  return $?
+}
+
+stopServiceHandler() {
+  local pid=`kv.getPid`
+
+  kv.sendSignal "$SIGNAL_TERM"
+
+  if kv.getStopStatus ; then
+    return $ACTION_OK
+  else
+    if [[ -n "$1" ]] ; then
+      kv.killProcess $pid 
+    fi
+
+    return $ACTION_ERROR
+  fi
+}
+
+###############################################################################
+
+prepare
+
+kv.go $@
