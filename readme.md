@@ -11,7 +11,7 @@ Note that pkg.re does not hold the package code. Instead, the go tool is redirec
 
 pkg.re is fully compatible with [gopkg.in](https://gopkg.in) service.
 
-#### Routing exmaples
+#### Routing examples
 
 ````
 go get pkg.re/essentialkaos/ek.v1      → github.com/essentialkaos/ek tag/branch v1.x.x
