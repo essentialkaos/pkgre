@@ -243,7 +243,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	refsData, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		return nil, fmt.Errorf("Can't read GitHub response: %s", err.Error())
+		return nil, fmt.Errorf("Can't read GitHub response: %v", err)
 	}
 
 	if len(refsData) == 0 {
@@ -253,7 +253,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	refs, err := refs.Parse(refsData)
 
 	if err != nil {
-		return nil, fmt.Errorf("Can't parse refs data: %s", err.Error())
+		return nil, fmt.Errorf("Can't parse refs data: %v", err)
 	}
 
 	return refs, nil

@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 
 	"pkg.re/essentialkaos/ek.v1/arg"
 	"pkg.re/essentialkaos/ek.v1/fmtc"
@@ -91,7 +90,7 @@ func main() {
 		fmtc.Println("{r}Arguments parsing errors:{!}")
 
 		for _, err := range errs {
-			fmtc.Printf("  {r}%s{!}\n", err.Error())
+			fmtc.Printf("  {r}%v{!}\n", err)
 		}
 
 		os.Exit(1)
@@ -114,7 +113,7 @@ func main() {
 	err := knf.Global(arg.GetS(ARG_CONFIG))
 
 	if err != nil {
-		fmtc.Printf("{r}%s{!}\n", err.Error())
+		fmtc.Printf("{r}%v{!}\n", err)
 		os.Exit(1)
 	}
 
@@ -185,7 +184,7 @@ func validateConfig() {
 		fmtc.Println("{r}Error while config validation:{!}")
 
 		for _, err := range errs {
-			fmtc.Printf("  {r}%s{!}\n", err.Error())
+			fmtc.Printf("  {r}%v{!}\n", err)
 		}
 
 		os.Exit(1)
@@ -196,19 +195,15 @@ func validateConfig() {
 func setupLogger() {
 	err := log.Set(knf.GetS(LOG_FILE), knf.GetM(LOG_PERMS, 0644))
 
-	levels := map[string]int{
-		"debug": log.DEBUG,
-		"info":  log.INFO,
-		"warn":  log.WARN,
-		"error": log.ERROR,
-		"crit":  log.CRIT,
+	if err != nil {
+		fmtc.Printf("{r}Can't setup logger: %v{!}\n", err)
+		os.Exit(1)
 	}
 
-	log.MinLevel(levels[strings.ToLower(knf.GetS(LOG_LEVEL, "debug"))])
+	err = log.MinLevel(knf.GetS(LOG_LEVEL, "info"))
 
 	if err != nil {
-		fmtc.Printf("{r}Can't setup logger: %s{!}\n", err.Error())
-		os.Exit(1)
+		fmtc.Printf("{r}Can't set log level: %v{!}\n", err)
 	}
 }
 
