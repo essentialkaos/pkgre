@@ -13,4 +13,4 @@ before_install:
   - make deps
 
 script:
-  - make morpher
+  - make all
