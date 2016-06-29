@@ -1,4 +1,4 @@
-## `pkg.re`
+## `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre)
 
 The [pkg.re](https://pkg.re) service provides versioned URLs that offer the proper metadata for redirecting the go tool onto well defined GitHub repositories. Developers that choose to use this service are strongly encouraged to not make any backwards incompatible changes without also changing the version in the package URL. This convention improves the chances that dependent code will continue to work while depended upon packages evolve.
 
