@@ -17,13 +17,13 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v1/knf"
-	"pkg.re/essentialkaos/ek.v1/log"
-	"pkg.re/essentialkaos/ek.v1/req"
-	"pkg.re/essentialkaos/ek.v1/sortutil"
-	"pkg.re/essentialkaos/ek.v1/version"
+	"pkg.re/essentialkaos/ek.v2/knf"
+	"pkg.re/essentialkaos/ek.v2/log"
+	"pkg.re/essentialkaos/ek.v2/req"
+	"pkg.re/essentialkaos/ek.v2/sortutil"
+	"pkg.re/essentialkaos/ek.v2/version"
 
-	"pkg.re/essentialkaos/librato.v1"
+	"pkg.re/essentialkaos/librato.v2"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
@@ -212,14 +212,7 @@ func notFoundResponse(w http.ResponseWriter, data string) {
 
 // appendProcHeader append header with processing time
 func appendProcHeader(w http.ResponseWriter, start time.Time) {
-	procTime := time.Since(start)
-	procTimeSec := 0.0
-
-	if procTime > time.Millisecond {
-		procTimeSec = float64(procTime) / float64(time.Second)
-	}
-
-	w.Header().Add("X-Morpher-Time", fmt.Sprintf("%g", procTimeSec))
+	w.Header().Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
 }
 
 // redirectRequest add redirect header to repsponse

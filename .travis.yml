@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.6.2
+  - tip
+
+sudo: false
+
+os:
+  - linux
+
+before_install:
+  - make deps
+
+script:
+  - make all
