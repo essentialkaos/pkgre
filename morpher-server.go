@@ -12,16 +12,16 @@ import (
 	"os"
 	"runtime"
 
-	"pkg.re/essentialkaos/ek.v1/arg"
-	"pkg.re/essentialkaos/ek.v1/fmtc"
-	"pkg.re/essentialkaos/ek.v1/fsutil"
-	"pkg.re/essentialkaos/ek.v1/knf"
-	"pkg.re/essentialkaos/ek.v1/log"
-	"pkg.re/essentialkaos/ek.v1/req"
-	"pkg.re/essentialkaos/ek.v1/signal"
-	"pkg.re/essentialkaos/ek.v1/usage"
+	"pkg.re/essentialkaos/ek.v2/arg"
+	"pkg.re/essentialkaos/ek.v2/fmtc"
+	"pkg.re/essentialkaos/ek.v2/fsutil"
+	"pkg.re/essentialkaos/ek.v2/knf"
+	"pkg.re/essentialkaos/ek.v2/log"
+	"pkg.re/essentialkaos/ek.v2/req"
+	"pkg.re/essentialkaos/ek.v2/signal"
+	"pkg.re/essentialkaos/ek.v2/usage"
 
-	"pkg.re/essentialkaos/librato.v1"
+	"pkg.re/essentialkaos/librato.v2"
 
 	"github.com/essentialkaos/pkgre/morpher"
 )
@@ -30,7 +30,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "1.0.0"
+	VER  = "1.0.1"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
