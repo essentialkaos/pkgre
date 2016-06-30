@@ -327,12 +327,12 @@ func collectStats() []librato.Measurement {
 	prefix := knf.GetS(LIBRATO_PREFIX)
 
 	metrics := []librato.Measurement{
-		&librato.Gauge{Name: prefix + ".hits", Value: stats.Hits},
-		&librato.Gauge{Name: prefix + ".misses", Value: stats.Misses},
-		&librato.Gauge{Name: prefix + ".errors", Value: stats.Errors},
-		&librato.Gauge{Name: prefix + ".redirects", Value: stats.Redirects},
-		&librato.Gauge{Name: prefix + ".docs", Value: stats.Docs},
-		&librato.Gauge{Name: prefix + ".goget", Value: stats.Goget},
+		librato.Gauge{Name: prefix + ".hits", Value: stats.Hits},
+		librato.Gauge{Name: prefix + ".misses", Value: stats.Misses},
+		librato.Gauge{Name: prefix + ".errors", Value: stats.Errors},
+		librato.Gauge{Name: prefix + ".redirects", Value: stats.Redirects},
+		librato.Gauge{Name: prefix + ".docs", Value: stats.Docs},
+		librato.Gauge{Name: prefix + ".goget", Value: stats.Goget},
 	}
 
 	// Clean stats counters
