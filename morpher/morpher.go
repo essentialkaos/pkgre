@@ -113,6 +113,9 @@ func initHTTPClient() {
 
 func requestHandler(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
+
+	defer requestRecover(ctx, start)
+
 	path := string(ctx.Path())
 
 	if path == "/" {
@@ -231,6 +234,17 @@ func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
 func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Set("Location", url)
 	ctx.SetStatusCode(http.StatusTemporaryRedirect)
+}
+
+// requestRecover recover panic in request
+func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
+	r := recover()
+
+	if r != nil {
+		log.Error("Recovered internal error: %v", r)
+		appendProcHeader(ctx, start)
+		ctx.SetStatusCode(http.StatusInternalServerError)
+	}
 }
 
 // encodeMetrics encode metrics to JSON
