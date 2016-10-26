@@ -4,11 +4,11 @@
 
 ########################################################################################
 
-all: morpher-server
+all: morpher-server morpher-librato
 
 deps:
 	go get -v pkg.re/essentialkaos/ek.v5
-	go get -v pkg.re/essentialkaos/librato.v2
+	go get -v pkg.re/essentialkaos/librato.v3
 	go get -v github.com/valyala/fasthttp
 
 fmt:
@@ -17,5 +17,9 @@ fmt:
 morpher-server:
 	go build morpher-server.go
 
+morpher-librato:
+	go build morpher-librato.go
+
 clean:
 	rm -f morpher-server
+	rm -f morpher-librato

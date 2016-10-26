@@ -1,0 +1,2 @@
+# Send metrics to Librato
+* * * * * morpher /usr/bin/morpher-librato &> /dev/null || :

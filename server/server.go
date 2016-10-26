@@ -106,7 +106,7 @@ func Init() {
 	err := knf.Global(arg.GetS(ARG_CONFIG))
 
 	if err != nil {
-		fmtc.Printf("{r}%v{!}\n", err)
+		printError(err.Error())
 		os.Exit(1)
 	}
 
