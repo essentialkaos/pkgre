@@ -39,16 +39,3 @@
   # Defaul log permissions 
   perms: 0644
 
-[librato]
-
-  # Enable or disable sending metrics to librato
-  enabled: false
-
-  # Mail
-  mail: 
-
-  # Token
-  token:
-
-  # Prefix used for metrics names
-  prefix: pkgre.morpher

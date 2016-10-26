@@ -12,16 +12,13 @@ import (
 	"os"
 	"runtime"
 
-	"pkg.re/essentialkaos/ek.v2/arg"
-	"pkg.re/essentialkaos/ek.v2/fmtc"
-	"pkg.re/essentialkaos/ek.v2/fsutil"
-	"pkg.re/essentialkaos/ek.v2/knf"
-	"pkg.re/essentialkaos/ek.v2/log"
-	"pkg.re/essentialkaos/ek.v2/req"
-	"pkg.re/essentialkaos/ek.v2/signal"
-	"pkg.re/essentialkaos/ek.v2/usage"
-
-	"pkg.re/essentialkaos/librato.v2"
+	"pkg.re/essentialkaos/ek.v5/arg"
+	"pkg.re/essentialkaos/ek.v5/fmtc"
+	"pkg.re/essentialkaos/ek.v5/fsutil"
+	"pkg.re/essentialkaos/ek.v5/knf"
+	"pkg.re/essentialkaos/ek.v5/log"
+	"pkg.re/essentialkaos/ek.v5/signal"
+	"pkg.re/essentialkaos/ek.v5/usage"
 
 	"github.com/essentialkaos/pkgre/morpher"
 )
@@ -30,7 +27,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "1.0.2"
+	VER  = "2.0.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -66,16 +63,12 @@ const (
 	LOG_DIR              = "log:dir"
 	LOG_FILE             = "log:file"
 	LOG_PERMS            = "log:perms"
-	LIBRATO_ENABLED      = "librato:enabled"
-	LIBRATO_MAIL         = "librato:mail"
-	LIBRATO_TOKEN        = "librato:token"
-	LIBRATO_PREFIX       = "librato:prefix"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 var argMap = arg.Map{
-	ARG_CONFIG:   &arg.V{Value: "/etc/morpher.conf"},
+	ARG_CONFIG:   &arg.V{Value: "/etc/morpher.knf"},
 	ARG_NO_COLOR: &arg.V{Type: arg.BOOL},
 	ARG_HELP:     &arg.V{Type: arg.BOOL, Alias: "u:usage"},
 	ARG_VER:      &arg.V{Type: arg.BOOL, Alias: "ver"},
@@ -87,10 +80,10 @@ func main() {
 	_, errs := arg.Parse(argMap)
 
 	if len(errs) != 0 {
-		fmtc.Println("{r}Arguments parsing errors:{!}")
+		printError("Arguments parsing errors:")
 
 		for _, err := range errs {
-			fmtc.Printf("  {r}%v{!}\n", err)
+			printError("  %v", err)
 		}
 
 		os.Exit(1)
@@ -126,11 +119,6 @@ func main() {
 
 // prepare prepare service for start
 func prepare() {
-	// Set default user agent for all requests
-	req.UserAgent = fmtc.Sprintf("%s/%s (go; %s; %s-%s)",
-		APP, VER, runtime.Version(),
-		runtime.GOARCH, runtime.GOOS)
-
 	// Register signal handlers
 	signal.Handlers{
 		signal.TERM: termSignalHandler,
@@ -140,7 +128,6 @@ func prepare() {
 
 	validateConfig()
 	setupLogger()
-	setupLibrato()
 }
 
 // validateConfig validate config values
@@ -157,34 +144,26 @@ func validateConfig() {
 	}
 
 	validators := []*knf.Validator{
-		&knf.Validator{MAIN_PROCS, knf.Less, MIN_PROCS},
-		&knf.Validator{MAIN_PROCS, knf.Greater, MAX_PROCS},
-		&knf.Validator{HTTP_PORT, knf.Less, MIN_PORT},
-		&knf.Validator{HTTP_PORT, knf.Greater, MAX_PORT},
-		&knf.Validator{HTTP_READ_TIMEOUT, knf.Less, MIN_READ_TIMEOUT},
-		&knf.Validator{HTTP_READ_TIMEOUT, knf.Greater, MAX_READ_TIMEOUT},
-		&knf.Validator{HTTP_WRITE_TIMEOUT, knf.Less, MIN_WRITE_TIMEOUT},
-		&knf.Validator{HTTP_WRITE_TIMEOUT, knf.Greater, MAX_WRITE_TIMEOUT},
-		&knf.Validator{HTTP_MAX_HEADER_SIZE, knf.Less, MIN_HEADER_SIZE},
-		&knf.Validator{HTTP_MAX_HEADER_SIZE, knf.Greater, MAX_HEADER_SIZE},
-		&knf.Validator{LOG_DIR, permsChecker, "DWX"},
-	}
-
-	if knf.GetB(LIBRATO_ENABLED, false) {
-		validators = append(validators,
-			&knf.Validator{LIBRATO_MAIL, knf.Empty, nil},
-			&knf.Validator{LIBRATO_TOKEN, knf.Empty, nil},
-			&knf.Validator{LIBRATO_PREFIX, knf.Empty, nil},
-		)
+		{MAIN_PROCS, knf.Less, MIN_PROCS},
+		{MAIN_PROCS, knf.Greater, MAX_PROCS},
+		{HTTP_PORT, knf.Less, MIN_PORT},
+		{HTTP_PORT, knf.Greater, MAX_PORT},
+		{HTTP_READ_TIMEOUT, knf.Less, MIN_READ_TIMEOUT},
+		{HTTP_READ_TIMEOUT, knf.Greater, MAX_READ_TIMEOUT},
+		{HTTP_WRITE_TIMEOUT, knf.Less, MIN_WRITE_TIMEOUT},
+		{HTTP_WRITE_TIMEOUT, knf.Greater, MAX_WRITE_TIMEOUT},
+		{HTTP_MAX_HEADER_SIZE, knf.Less, MIN_HEADER_SIZE},
+		{HTTP_MAX_HEADER_SIZE, knf.Greater, MAX_HEADER_SIZE},
+		{LOG_DIR, permsChecker, "DWX"},
 	}
 
 	errs := knf.Validate(validators)
 
 	if len(errs) != 0 {
-		fmtc.Println("{r}Error while config validation:{!}")
+		printError("Error while config validation:")
 
 		for _, err := range errs {
-			fmtc.Printf("  {r}%v{!}\n", err)
+			printError("  %v", err)
 		}
 
 		os.Exit(1)
@@ -196,38 +175,37 @@ func setupLogger() {
 	err := log.Set(knf.GetS(LOG_FILE), knf.GetM(LOG_PERMS, 0644))
 
 	if err != nil {
-		fmtc.Printf("{r}Can't setup logger: %v{!}\n", err)
+		printError("Can't setup logger: %v", err)
 		os.Exit(1)
 	}
 
 	err = log.MinLevel(knf.GetS(LOG_LEVEL, "info"))
 
 	if err != nil {
-		fmtc.Printf("{r}Can't set log level: %v{!}\n", err)
+		printError("Can't set log level: %v", err)
 	}
-}
-
-// setupLibrato set librato credentials
-func setupLibrato() {
-	if !knf.GetB(LIBRATO_ENABLED, false) {
-		return
-	}
-
-	librato.Mail = knf.GetS(LIBRATO_MAIL)
-	librato.Token = knf.GetS(LIBRATO_TOKEN)
 }
 
 // start start web server
 func start() {
 	runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
 
-	log.Debug("Max procs set to %d", knf.GetI(MAIN_PROCS))
+	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
 
 	err := morpher.Start()
 
 	if err != nil {
 		log.Crit(err.Error())
 		exit(1)
+	}
+}
+
+// printError print error message
+func printError(message string, args ...interface{}) {
+	if len(args) == 0 {
+		fmtc.Printf("{r}%s{!}\n", message)
+	} else {
+		fmtc.Printf("{r}%s{!}\n", fmt.Sprintf(message, args...))
 	}
 }
 
