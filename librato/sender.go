@@ -10,6 +10,7 @@ package librato
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"pkg.re/essentialkaos/ek.v5/arg"
 	"pkg.re/essentialkaos/ek.v5/knf"
@@ -126,15 +127,25 @@ func fetchMetrics(url string) (*Metrics, error) {
 
 // sendMetrics send metrics to librato
 func sendMetrics(metrics *Metrics) error {
+	now := time.Now()
 	prefix := knf.GetS(LIBRATO_PREFIX)
 
+	mt := time.Date(
+		now.Year(),
+		now.Month(),
+		now.Day(),
+		now.Hour(),
+		now.Minute(),
+		0, 0, time.Local,
+	).Unix()
+
 	errs := librato.AddMetric(
-		librato.Counter{Name: prefix + ".hits", Value: metrics.Hits},
-		librato.Counter{Name: prefix + ".misses", Value: metrics.Misses},
-		librato.Counter{Name: prefix + ".errors", Value: metrics.Errors},
-		librato.Counter{Name: prefix + ".redirects", Value: metrics.Redirects},
-		librato.Counter{Name: prefix + ".docs", Value: metrics.Docs},
-		librato.Counter{Name: prefix + ".goget", Value: metrics.Goget},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".hits", Value: metrics.Hits},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".misses", Value: metrics.Misses},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".errors", Value: metrics.Errors},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".redirects", Value: metrics.Redirects},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".docs", Value: metrics.Docs},
+		librato.Counter{MeasureTime: mt, Name: prefix + ".goget", Value: metrics.Goget},
 	)
 
 	if len(errs) == 0 {
