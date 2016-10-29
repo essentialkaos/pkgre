@@ -35,12 +35,9 @@ import (
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
-	HTTP_IP              = "http:ip"
-	HTTP_PORT            = "http:port"
-	HTTP_READ_TIMEOUT    = "http:read-timeout"
-	HTTP_WRITE_TIMEOUT   = "http:write-timeout"
-	HTTP_MAX_HEADER_SIZE = "http:max-header-size"
-	HTTP_REDIRECT        = "http:redirect"
+	HTTP_IP       = "http:ip"
+	HTTP_PORT     = "http:port"
+	HTTP_REDIRECT = "http:redirect"
 )
 
 const USER_AGENT = "PkgRE-Morpher/2"

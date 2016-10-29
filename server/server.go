@@ -39,30 +39,21 @@ const (
 )
 
 const (
-	MIN_PROCS         = 1
-	MAX_PROCS         = 32
-	MIN_PORT          = 1025
-	MAX_PORT          = 65535
-	MIN_READ_TIMEOUT  = 1
-	MAX_READ_TIMEOUT  = 120
-	MIN_WRITE_TIMEOUT = 1
-	MAX_WRITE_TIMEOUT = 120
-	MIN_HEADER_SIZE   = 1024
-	MAX_HEADER_SIZE   = 10 * 1024 * 1024
+	MIN_PROCS = 1
+	MAX_PROCS = 32
+	MIN_PORT  = 1025
+	MAX_PORT  = 65535
 )
 
 const (
-	MAIN_PROCS           = "main:procs"
-	HTTP_IP              = "http:ip"
-	HTTP_PORT            = "http:port"
-	HTTP_READ_TIMEOUT    = "http:read-timeout"
-	HTTP_WRITE_TIMEOUT   = "http:write-timeout"
-	HTTP_MAX_HEADER_SIZE = "http:max-header-size"
-	HTTP_REDIRECT        = "http:redirect"
-	LOG_LEVEL            = "log:level"
-	LOG_DIR              = "log:dir"
-	LOG_FILE             = "log:file"
-	LOG_PERMS            = "log:perms"
+	MAIN_PROCS    = "main:procs"
+	HTTP_IP       = "http:ip"
+	HTTP_PORT     = "http:port"
+	HTTP_REDIRECT = "http:redirect"
+	LOG_LEVEL     = "log:level"
+	LOG_DIR       = "log:dir"
+	LOG_FILE      = "log:file"
+	LOG_PERMS     = "log:perms"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -148,12 +139,6 @@ func validateConfig() {
 		{MAIN_PROCS, knf.Greater, MAX_PROCS},
 		{HTTP_PORT, knf.Less, MIN_PORT},
 		{HTTP_PORT, knf.Greater, MAX_PORT},
-		{HTTP_READ_TIMEOUT, knf.Less, MIN_READ_TIMEOUT},
-		{HTTP_READ_TIMEOUT, knf.Greater, MAX_READ_TIMEOUT},
-		{HTTP_WRITE_TIMEOUT, knf.Less, MIN_WRITE_TIMEOUT},
-		{HTTP_WRITE_TIMEOUT, knf.Greater, MAX_WRITE_TIMEOUT},
-		{HTTP_MAX_HEADER_SIZE, knf.Less, MIN_HEADER_SIZE},
-		{HTTP_MAX_HEADER_SIZE, knf.Greater, MAX_HEADER_SIZE},
 		{LOG_DIR, permsChecker, "DWX"},
 	}
 
