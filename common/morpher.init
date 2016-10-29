@@ -6,7 +6,7 @@
 
 # chkconfig: - 85 15
 # processname: morpher
-# config: /etc/morpher.conf
+# config: /etc/morpher.knf
 # pidfile: /var/run/mockka/morpher.pid
 # description: Morpher Daemon
 
@@ -20,7 +20,7 @@ kv[prog_name]="morpher"
 kv[search_pattern]="morpher-server"
 
 binary="/usr/bin/morpher-server"
-conf_file="/etc/morpher.conf"
+conf_file="/etc/morpher.knf"
 
 kv[user]="morpher"
 kv[pid_dir]="/var/run/pkgre/morpher"
