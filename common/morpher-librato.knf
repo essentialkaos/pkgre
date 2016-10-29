@@ -1,0 +1,20 @@
+[main]
+
+  # Enabled or disable sending metrics to Librato
+  enabled: false
+
+[metrics]
+
+  # Morpher metrics URL
+  url: http://127.0.0.1:39000/_metrics
+
+[librato]
+
+  # Mail
+  mail:
+
+  # Token
+  token:
+
+  # Prefix used for metrics names
+  prefix: pkgre.morpher

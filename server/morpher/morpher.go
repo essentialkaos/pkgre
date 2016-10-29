@@ -2,7 +2,7 @@ package morpher
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                     Copyright (c) 2009-2015 Essential Kaos                         //
+//                     Copyright (c) 2009-2016 Essential Kaos                         //
 //      Essential Kaos Open Source License <http://essentialkaos.com/ekol?en>         //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -10,37 +10,37 @@ package morpher
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v2/knf"
-	"pkg.re/essentialkaos/ek.v2/log"
-	"pkg.re/essentialkaos/ek.v2/req"
-	"pkg.re/essentialkaos/ek.v2/sortutil"
-	"pkg.re/essentialkaos/ek.v2/version"
-
-	"pkg.re/essentialkaos/librato.v2"
+	"pkg.re/essentialkaos/ek.v5/knf"
+	"pkg.re/essentialkaos/ek.v5/log"
+	"pkg.re/essentialkaos/ek.v5/sortutil"
+	"pkg.re/essentialkaos/ek.v5/version"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
+
+	"github.com/valyala/fasthttp"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
-	HTTP_IP              = "http:ip"
-	HTTP_PORT            = "http:port"
-	HTTP_READ_TIMEOUT    = "http:read-timeout"
-	HTTP_WRITE_TIMEOUT   = "http:write-timeout"
-	HTTP_MAX_HEADER_SIZE = "http:max-header-size"
-	HTTP_REDIRECT        = "http:redirect"
-	LIBRATO_ENABLED      = "librato:enabled"
-	LIBRATO_PREFIX       = "librato:prefix"
+	HTTP_IP       = "http:ip"
+	HTTP_PORT     = "http:port"
+	HTTP_REDIRECT = "http:redirect"
 )
+
+const USER_AGENT = "PkgRE-Morpher/2"
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -48,16 +48,6 @@ const (
 type PkgInfo struct {
 	RepoInfo *repo.Info
 	Target   string
-}
-
-// Stats is struct with some statistics data
-type Stats struct {
-	Hits      int
-	Misses    int
-	Errors    int
-	Redirects int
-	Docs      int
-	Goget     int
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -77,78 +67,97 @@ var goGetTemplate = template.Must(template.New("").Parse(`<html>
 </html>
 `))
 
-// stats is struct with statistics data
-var stats = &Stats{0, 0, 0, 0, 0, 0}
+// client is default client for all http requests
+var client *http.Client
+
+// metrics
+var (
+	counterHits      uint64
+	counterMisses    uint64
+	counterErrors    uint64
+	counterRedirects uint64
+	counterDocs      uint64
+	counterGoget     uint64
+)
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Start start HTTP server
 func Start() error {
-	server := &http.Server{
-		Addr:           knf.GetS(HTTP_IP) + ":" + knf.GetS(HTTP_PORT),
-		Handler:        http.NewServeMux(),
-		ReadTimeout:    time.Duration(knf.GetI(HTTP_READ_TIMEOUT)) * time.Second,
-		WriteTimeout:   time.Duration(knf.GetI(HTTP_WRITE_TIMEOUT)) * time.Second,
-		MaxHeaderBytes: knf.GetI(HTTP_MAX_HEADER_SIZE),
-	}
+	initHTTPClient()
 
-	server.Handler.(*http.ServeMux).HandleFunc("/", requestHandler)
+	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
 
-	log.Info("Morpher HTTP server started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
-
-	if knf.GetB(LIBRATO_ENABLED, false) {
-		librato.NewCollector(time.Minute, collectStats).ErrorHandler = collectErrorHandler
-	}
-
-	err := server.ListenAndServe()
-
-	return err
+	return fasthttp.ListenAndServe(knf.GetS(HTTP_IP)+":"+knf.GetS(HTTP_PORT), requestHandler)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// requestHandler derfault request handler
-func requestHandler(w http.ResponseWriter, r *http.Request) {
+func initHTTPClient() {
+	dialer := &net.Dialer{
+		Timeout: time.Second,
+	}
+
+	transport := &http.Transport{
+		Dial: dialer.Dial,
+	}
+
+	client = &http.Client{
+		Transport: transport,
+		Timeout:   time.Second,
+	}
+}
+
+func requestHandler(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
-	path := r.URL.Path
+
+	defer requestRecover(ctx, start)
+
+	path := string(ctx.Path())
 
 	if path == "/" {
-		appendProcHeader(w, start)
-		redirectRequest(w, knf.GetS(HTTP_REDIRECT))
+		appendProcHeader(ctx, start)
+		redirectRequest(ctx, knf.GetS(HTTP_REDIRECT))
+		return
+	}
+
+	if path == "/_metrics" {
+		appendProcHeader(ctx, start)
+		encodeMetrics(ctx)
 		return
 	}
 
 	// Redirect to documentation
 	if strings.Contains(path, "#") {
-		stats.Docs++
-		appendProcHeader(w, start)
-		redirectRequest(w, "https://godoc.org/pkg.re"+path)
+		atomic.AddUint64(&counterDocs, 1)
+		appendProcHeader(ctx, start)
+		redirectRequest(ctx, "https://godoc.org/pkg.re"+path)
 		return
 	}
 
 	repoInfo, err := repo.ParsePath(path)
 
 	if err != nil {
-		stats.Errors++
+		atomic.AddUint64(&counterErrors, 1)
 		log.Warn("Can't parse repo path: %v", err)
-		appendProcHeader(w, start)
-		notFoundResponse(w, err.Error())
+		appendProcHeader(ctx, start)
+		notFoundResponse(ctx, err.Error())
 		return
 	}
 
 	if repoInfo.Path == "git-upload-pack" {
-		appendProcHeader(w, start)
-		redirectRequest(w, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
+		appendProcHeader(ctx, start)
+		redirectRequest(ctx, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
 		return
 	}
 
 	refsInfo, err := fetchRefs(repoInfo)
 
 	if err != nil {
-		stats.Errors++
+		atomic.AddUint64(&counterErrors, 1)
 		log.Warn("Can't process refs data for %s: %v", repoInfo.GitHubRoot(), err)
-		appendProcHeader(w, start)
-		notFoundResponse(w, err.Error())
+		appendProcHeader(ctx, start)
+		notFoundResponse(ctx, err.Error())
 		return
 	}
 
@@ -159,78 +168,116 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		if n != "" {
 			switch t {
 			case refs.TYPE_TAG:
-				log.Info("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
+				atomic.AddUint64(&counterHits, 1)
+				log.Debug("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
 			case refs.TYPE_BRANCH:
-				log.Info("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
+				atomic.AddUint64(&counterHits, 1)
+				log.Debug("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
 			default:
+				atomic.AddUint64(&counterMisses, 1)
 				log.Warn("%s -> master (proper tag/branch not found)", path)
 			}
 		} else {
+			atomic.AddUint64(&counterMisses, 1)
 			log.Info("%s -> master (no target version)", path)
 		}
 
-		stats.Hits++
-
-		appendProcHeader(w, start)
-		w.Header().Set("Content-Type", "application/x-git-upload-pack-advertisement")
-		w.Write(refsInfo.Rewrite(n, t))
+		appendProcHeader(ctx, start)
+		ctx.Response.Header.Set("Content-Type", "application/x-git-upload-pack-advertisement")
+		ctx.Write(refsInfo.Rewrite(n, t))
 
 		return
 	}
 
 	pkgInfo := &PkgInfo{repoInfo, n}
 
-	if r.FormValue("go-get") == "1" {
-		appendProcHeader(w, start)
+	if len(ctx.FormValue("go-get")) != 0 {
+		appendProcHeader(ctx, start)
 
-		w.Header().Set("Content-Type", "text/html")
+		ctx.Response.Header.Add("Content-Type", "text/html")
 
-		err := goGetTemplate.Execute(w, pkgInfo)
+		err := goGetTemplate.Execute(ctx, pkgInfo)
 
 		if err != nil {
-			stats.Errors++
+			atomic.AddUint64(&counterErrors, 1)
 			log.Error("Can't render go get template: %v", err)
 		}
 
-		stats.Goget++
+		atomic.AddUint64(&counterGoget, 1)
 
 		return
 	}
 
-	stats.Redirects++
+	atomic.AddUint64(&counterRedirects, 1)
 
 	// Redirect to github
-	appendProcHeader(w, start)
-	redirectRequest(w, repoInfo.GitHubURL(n))
+	appendProcHeader(ctx, start)
+	redirectRequest(ctx, repoInfo.GitHubURL(n))
 }
 
 // notFoundResponse write 404 response
-func notFoundResponse(w http.ResponseWriter, data string) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(data + "\n"))
+func notFoundResponse(ctx *fasthttp.RequestCtx, data string) {
+	ctx.SetStatusCode(http.StatusNotFound)
+	ctx.WriteString(data + "\n")
 }
 
 // appendProcHeader append header with processing time
-func appendProcHeader(w http.ResponseWriter, start time.Time) {
-	w.Header().Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
+func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
+	ctx.Response.Header.Set("Server", "Morpher/2 fasthttp")
+	ctx.Response.Header.Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
 }
 
 // redirectRequest add redirect header to repsponse
-func redirectRequest(w http.ResponseWriter, url string) {
-	w.Header().Set("Location", url)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
+	ctx.Response.Header.Set("Location", url)
+	ctx.SetStatusCode(http.StatusTemporaryRedirect)
+}
+
+// requestRecover recover panic in request
+func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
+	r := recover()
+
+	if r != nil {
+		log.Error("Recovered internal error: %v", r)
+		appendProcHeader(ctx, start)
+		ctx.SetStatusCode(http.StatusInternalServerError)
+	}
+}
+
+// encodeMetrics encode metrics to JSON
+func encodeMetrics(ctx *fasthttp.RequestCtx) {
+	metrics := "{\n"
+	metrics += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&counterHits), 10) + ",\n"
+	metrics += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&counterMisses), 10) + ",\n"
+	metrics += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&counterErrors), 10) + ",\n"
+	metrics += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&counterRedirects), 10) + ",\n"
+	metrics += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&counterDocs), 10) + ",\n"
+	metrics += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&counterGoget), 10) + "\n"
+	metrics += "}\n"
+
+	ctx.WriteString(metrics)
 }
 
 // fetchRefs downloads and parse refs info from github
 func fetchRefs(repo *repo.Info) (*refs.Info, error) {
-	resp, err := req.Request{
-		URL:         "https://" + repo.GitHubRoot() + ".git/info/refs?service=git-upload-pack",
-		AutoDiscard: true,
-		Close:       true,
-	}.Get()
+	req, err := http.NewRequest("GET", "https://"+repo.GitHubRoot()+".git/info/refs?service=git-upload-pack", nil)
 
 	if err != nil {
 		return nil, err
+	}
+
+	req.Header.Add("User-Agent", USER_AGENT)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		io.Copy(ioutil.Discard, resp.Body)
+
+		return nil, fmt.Errorf("GitHub return status code <%s>", resp.Status)
 	}
 
 	refsData, err := ioutil.ReadAll(resp.Body)
@@ -260,10 +307,10 @@ func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string
 	}
 
 	// Try to parse target as version
-	targetVersion := version.Parse(getCleanVer(repoInfo.Target))
+	targetVersion, err := version.Parse(getCleanVer(repoInfo.Target))
 
 	// Can't parse version
-	if !targetVersion.Valid() {
+	if err != nil {
 		// Try to find branch with given name
 		if refsInfo.HasBranch(repoInfo.Target) {
 			return refs.TYPE_BRANCH, repoInfo.Target
@@ -282,9 +329,9 @@ func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string
 
 	// Try to find best fit tag
 	for _, t := range tags {
-		tagVer := version.Parse(getCleanVer(t))
+		tagVer, err := version.Parse(getCleanVer(t))
 
-		if !tagVer.Valid() {
+		if err != nil {
 			continue
 		}
 
@@ -320,39 +367,4 @@ func getCleanVer(v string) string {
 	}
 
 	return vf[1]
-}
-
-// collectStats push stats from stats struct to librato
-func collectStats() []librato.Measurement {
-	prefix := knf.GetS(LIBRATO_PREFIX)
-
-	metrics := []librato.Measurement{
-		librato.Gauge{Name: prefix + ".hits", Value: stats.Hits},
-		librato.Gauge{Name: prefix + ".misses", Value: stats.Misses},
-		librato.Gauge{Name: prefix + ".errors", Value: stats.Errors},
-		librato.Gauge{Name: prefix + ".redirects", Value: stats.Redirects},
-		librato.Gauge{Name: prefix + ".docs", Value: stats.Docs},
-		librato.Gauge{Name: prefix + ".goget", Value: stats.Goget},
-	}
-
-	// Clean stats counters
-	stats.Hits = 0
-	stats.Misses = 0
-	stats.Errors = 0
-	stats.Redirects = 0
-	stats.Docs = 0
-	stats.Goget = 0
-
-	return metrics
-}
-
-// collectErrorHandler librato errors handler
-func collectErrorHandler(errs []error) {
-	if len(errs) == 0 {
-		return
-	}
-
-	for _, e := range errs {
-		log.Error(e.Error())
-	}
 }
