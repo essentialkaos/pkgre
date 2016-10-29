@@ -13,15 +13,6 @@
   # HTTP server port
   port: 39000
 
-  # Read timeout (seconds)
-  read-timeout: 3
-
-  # Write timeout (seconds)
-  write-timeout: 3
-
-  # Max header syze (bytes)
-  max-header-size: 1048576
-
   # URL for redirect non-system request
   redirect: https://pkg.re
 
