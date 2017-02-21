@@ -2,8 +2,8 @@ package morpher
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                     Copyright (c) 2009-2016 Essential Kaos                         //
-//      Essential Kaos Open Source License <http://essentialkaos.com/ekol?en>         //
+//                     Copyright (c) 2009-2017 ESSENTIAL KAOS                         //
+//        Essential Kaos Open Source License <https://essentialkaos.com/ekol>         //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -21,10 +21,10 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v5/knf"
-	"pkg.re/essentialkaos/ek.v5/log"
-	"pkg.re/essentialkaos/ek.v5/sortutil"
-	"pkg.re/essentialkaos/ek.v5/version"
+	"pkg.re/essentialkaos/ek.v6/knf"
+	"pkg.re/essentialkaos/ek.v6/log"
+	"pkg.re/essentialkaos/ek.v6/sortutil"
+	"pkg.re/essentialkaos/ek.v6/version"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"

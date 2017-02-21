@@ -7,9 +7,9 @@
 all: morpher-server morpher-librato
 
 deps:
-	go get -v pkg.re/essentialkaos/ek.v5
-	go get -v pkg.re/essentialkaos/librato.v3
-	go get -v github.com/valyala/fasthttp
+	go get -v -d pkg.re/essentialkaos/ek.v6
+	go get -v -d pkg.re/essentialkaos/librato.v4
+	go get -v -d github.com/valyala/fasthttp
 
 fmt:
 	find . -name "*.go" -exec gofmt -s -w {} \;
