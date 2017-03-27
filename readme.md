@@ -11,16 +11,28 @@ Note that pkg.re does not hold the package code. Instead, the go tool is redirec
 
 [pkg.re](https://pkg.re) have backward compatibility with [gopkg.in](https://gopkg.in) service.
 
+## Git support
+
+Since version 2.11.1 git [does not follow](https://github.com/git/git/commit/50d3413740d1da599cdc0106e6e916741394cc98) redirects by default. If you use git 2.11.0+ you must allow redirects for pkg.re using next command:
+
+```bash
+git config --global http.https://pkg.re.followRedirects true
+```
+
+_You can set this property for earlier versions as well._
+
+For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect the request to Github, without touching any byte of source code_).
+
 ## Routing examples
 
-````
+```
 go get pkg.re/essentialkaos/ek.v1      → github.com/essentialkaos/ek tag/branch v1.x.x
 go get pkg.re/essentialkaos/ek.v1.6    → github.com/essentialkaos/ek tag/branch v1.6.x
 go get pkg.re/essentialkaos/ek.v1.6.8  → github.com/essentialkaos/ek tag/branch v1.6.8
 go get pkg.re/essentialkaos/ek.develop → github.com/essentialkaos/ek tag/branch develop
 go get pkg.re/check.v1                 → github.com/essentialkaos/go-check/check tag/branch v1.x.x
 https://pkg.re/essentialkaos/ek.v1     → https://github.com/essentialkaos/ek/tree/v1.x.x
-````
+```
 
 `x` - latest available version
 
