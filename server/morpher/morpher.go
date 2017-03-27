@@ -21,10 +21,10 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v6/knf"
-	"pkg.re/essentialkaos/ek.v6/log"
-	"pkg.re/essentialkaos/ek.v6/sortutil"
-	"pkg.re/essentialkaos/ek.v6/version"
+	"pkg.re/essentialkaos/ek.v7/knf"
+	"pkg.re/essentialkaos/ek.v7/log"
+	"pkg.re/essentialkaos/ek.v7/sortutil"
+	"pkg.re/essentialkaos/ek.v7/version"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
