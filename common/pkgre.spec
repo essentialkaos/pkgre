@@ -50,7 +50,7 @@
 
 Summary:         pkg.re morpher server
 Name:            pkgre
-Version:         3.0.0
+Version:         3.1.0
 Release:         0%{?dist}
 Group:           Applications/System
 License:         EKOL
@@ -156,6 +156,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Sun Apr 09 2017 Anton Novojilov <andy@essentialkaos.com> - 3.1.0-0
+- Default HTTP client replaced by fasthttp client
+
 * Tue Mar 28 2017 Anton Novojilov <andy@essentialkaos.com> - 3.0.0-0
 - ek package updated to v7
 - librato package updated to v5
