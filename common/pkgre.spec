@@ -50,13 +50,13 @@
 
 Summary:         pkg.re morpher server
 Name:            pkgre
-Version:         3.1.0
+Version:         3.2.0
 Release:         0%{?dist}
 Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
 
-Source0:         %{name}-%{version}.tar.bz2
+Source0:         https://source.kaos.io/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -156,6 +156,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Tue Apr 11 2017 Anton Novojilov <andy@essentialkaos.com> - 3.2.0-0
+- Return original symref if target version is tag
+
 * Sun Apr 09 2017 Anton Novojilov <andy@essentialkaos.com> - 3.1.0-0
 - Default HTTP client replaced by fasthttp client
 

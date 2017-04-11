@@ -250,6 +250,8 @@ func rewriteHeadRefs(head, refName, refSHA string) string {
 		if strings.HasPrefix(headPart, "symref=") {
 			if strings.HasPrefix(refName, "refs/heads/") {
 				result = append(result, "symref=HEAD:"+refName)
+			} else {
+				result = append(result, headPart)
 			}
 
 			result = append(result, "oldref="+headPart[7:])
