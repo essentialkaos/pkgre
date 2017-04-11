@@ -10,9 +10,6 @@ package morpher
 import (
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -40,7 +37,7 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/2.1"
+const USER_AGENT = "PkgRE-Morpher/3.2"
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -68,7 +65,7 @@ var goGetTemplate = template.Must(template.New("").Parse(`<html>
 `))
 
 // client is default client for all http requests
-var client *http.Client
+var client *fasthttp.Client
 
 // metrics
 var (
@@ -94,17 +91,12 @@ func Start() error {
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func initHTTPClient() {
-	dialer := &net.Dialer{
-		Timeout: time.Second,
-	}
-
-	transport := &http.Transport{
-		Dial: dialer.Dial,
-	}
-
-	client = &http.Client{
-		Transport: transport,
-		Timeout:   time.Second,
+	client = &fasthttp.Client{
+		Name:                USER_AGENT,
+		MaxIdleConnDuration: time.Second,
+		ReadTimeout:         time.Second,
+		WriteTimeout:        time.Second,
+		MaxConnsPerHost:     150,
 	}
 }
 
@@ -223,7 +215,7 @@ func notFoundResponse(ctx *fasthttp.RequestCtx, data string) {
 
 // appendProcHeader append header with processing time
 func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
-	ctx.Response.Header.Set("Server", "Morpher/2 fasthttp")
+	ctx.Response.Header.Set("Server", "PKGRE Morpher")
 	ctx.Response.Header.Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
 }
 
@@ -260,30 +252,14 @@ func encodeMetrics(ctx *fasthttp.RequestCtx) {
 
 // fetchRefs downloads and parse refs info from github
 func fetchRefs(repo *repo.Info) (*refs.Info, error) {
-	req, err := http.NewRequest("GET", "https://"+repo.GitHubRoot()+".git/info/refs?service=git-upload-pack", nil)
+	var refsData []byte
 
-	if err != nil {
-		return nil, err
-	}
+	statusCode, refsData, err := client.Get(
+		nil, "https://"+repo.GitHubRoot()+".git/info/refs?service=git-upload-pack",
+	)
 
-	req.Header.Add("User-Agent", USER_AGENT)
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		io.Copy(ioutil.Discard, resp.Body)
-
-		return nil, fmt.Errorf("GitHub return status code <%s>", resp.Status)
-	}
-
-	refsData, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, fmt.Errorf("Can't read GitHub response: %v", err)
+	if statusCode != 200 {
+		return nil, fmt.Errorf("GitHub return status code <%s>", statusCode)
 	}
 
 	if len(refsData) == 0 {
