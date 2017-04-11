@@ -37,7 +37,7 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.1"
+const USER_AGENT = "PkgRE-Morpher/3.2"
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
