@@ -1,4 +1,4 @@
-# `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre)
+# `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre) [![License](https://gh.kaos.io/ekol.svg)](https://essentialkaos.com/ekol)
 
 The [pkg.re](https://pkg.re) service provides versioned URLs that offer the proper metadata for redirecting the go tool onto well defined GitHub repositories. Developers that choose to use this service are strongly encouraged to not make any backwards incompatible changes without also changing the version in the package URL. This convention improves the chances that dependent code will continue to work while depended upon packages evolve.
 
@@ -35,6 +35,10 @@ https://pkg.re/essentialkaos/ek.v1     → https://github.com/essentialkaos/ek/t
 ```
 
 `x` - latest available version
+
+## Contributing
+
+Before contributing to this project please read our [Contributing Guidelines](https://github.com/essentialkaos/contributing-guidelines#contributing-guidelines).
 
 ## License
 
