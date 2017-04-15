@@ -12,13 +12,13 @@ import (
 	"os"
 	"runtime"
 
-	"pkg.re/essentialkaos/ek.v7/arg"
-	"pkg.re/essentialkaos/ek.v7/fmtc"
-	"pkg.re/essentialkaos/ek.v7/fsutil"
-	"pkg.re/essentialkaos/ek.v7/knf"
-	"pkg.re/essentialkaos/ek.v7/log"
-	"pkg.re/essentialkaos/ek.v7/signal"
-	"pkg.re/essentialkaos/ek.v7/usage"
+	"pkg.re/essentialkaos/ek.v8/arg"
+	"pkg.re/essentialkaos/ek.v8/fmtc"
+	"pkg.re/essentialkaos/ek.v8/fsutil"
+	"pkg.re/essentialkaos/ek.v8/knf"
+	"pkg.re/essentialkaos/ek.v8/log"
+	"pkg.re/essentialkaos/ek.v8/signal"
+	"pkg.re/essentialkaos/ek.v8/usage"
 
 	"github.com/essentialkaos/pkgre/server/morpher"
 )

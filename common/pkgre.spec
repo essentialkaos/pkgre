@@ -50,7 +50,7 @@
 
 Summary:         pkg.re morpher server
 Name:            pkgre
-Version:         3.2.0
+Version:         3.3.0
 Release:         0%{?dist}
 Group:           Applications/System
 License:         EKOL
@@ -156,6 +156,10 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Sun Apr 16 2017 Anton Novojilov <andy@essentialkaos.com> - 3.3.0-0
+- ek package updated to v8
+- librato package updated to v6
+
 * Tue Apr 11 2017 Anton Novojilov <andy@essentialkaos.com> - 3.2.0-0
 - Return original symref if target version is tag
 

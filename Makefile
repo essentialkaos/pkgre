@@ -20,8 +20,8 @@ morpher-server:
 deps:
 	git config --global http.https://pkg.re.followRedirects true
 	go get -v github.com/valyala/fasthttp
-	go get -v pkg.re/essentialkaos/ek.v7
-	go get -v pkg.re/essentialkaos/librato.v5
+	go get -v pkg.re/essentialkaos/ek.v8
+	go get -v pkg.re/essentialkaos/librato.v6
 
 fmt:
 	find . -name "*.go" -exec gofmt -s -w {} \;

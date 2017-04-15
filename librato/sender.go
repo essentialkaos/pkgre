@@ -12,11 +12,11 @@ import (
 	"os"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v7/arg"
-	"pkg.re/essentialkaos/ek.v7/knf"
-	"pkg.re/essentialkaos/ek.v7/req"
+	"pkg.re/essentialkaos/ek.v8/arg"
+	"pkg.re/essentialkaos/ek.v8/knf"
+	"pkg.re/essentialkaos/ek.v8/req"
 
-	"pkg.re/essentialkaos/librato.v5"
+	"pkg.re/essentialkaos/librato.v6"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
