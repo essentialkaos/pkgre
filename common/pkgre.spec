@@ -157,6 +157,8 @@ rm -rf %{buildroot}
 
 %changelog
 * Sun Apr 16 2017 Anton Novojilov <andy@essentialkaos.com> - 3.3.0-0
+- Morpher now return 404 if can't find proper tag/branch
+- Code refactoring
 - ek package updated to v8
 - librato package updated to v6
 
