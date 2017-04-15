@@ -43,8 +43,11 @@ const USER_AGENT = "PkgRE-Morpher/3.3"
 
 // PkgInfo is struct with package info
 type PkgInfo struct {
-	RepoInfo *repo.Info
-	Target   string
+	RepoInfo   *repo.Info
+	RefsInfo   *refs.Info
+	Path       string
+	TargetType refs.RefType
+	TargetName string
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -56,7 +59,7 @@ var majorVerRegExp = regexp.MustCompile(`^[a-zA-Z]{0,}([0-9]{1}.*)`)
 var goGetTemplate = template.Must(template.New("").Parse(`<html>
   <head>
     <meta name="go-import" content="pkg.re/{{.RepoInfo.Root}} git https://pkg.re/{{.RepoInfo.Root}}" />
-    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .Target}}<meta name="go-source" content="pkg.re/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
+    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .TargetName}}<meta name="go-source" content="pkg.re/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
   </head>
   <body>
     go get pkg.re/{{.RepoInfo.FullPath}}
@@ -108,22 +111,19 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	path := string(ctx.Path())
 
 	if path == "/" {
-		appendProcHeader(ctx, start)
-		redirectRequest(ctx, knf.GetS(HTTP_REDIRECT))
+		processBasicRequest(ctx, start)
 		return
 	}
 
+	// Return metrics
 	if path == "/_metrics" {
-		appendProcHeader(ctx, start)
-		encodeMetrics(ctx)
+		processMetricsRequest(ctx, start)
 		return
 	}
 
 	// Redirect to documentation
 	if strings.Contains(path, "#") {
-		atomic.AddUint64(&counterDocs, 1)
-		appendProcHeader(ctx, start)
-		redirectRequest(ctx, "https://godoc.org/pkg.re"+path)
+		processDocsRequest(ctx, start, path)
 		return
 	}
 
@@ -137,9 +137,9 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	// Return rewritten pack
 	if repoInfo.Path == "git-upload-pack" {
-		appendProcHeader(ctx, start)
-		redirectRequest(ctx, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
+		processUploadPackRequest(ctx, start, repoInfo)
 		return
 	}
 
@@ -153,50 +153,18 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	t, n := suggestHead(repoInfo, refsInfo)
+	targetType, targetName := suggestHead(repoInfo, refsInfo)
+	pkgInfo := &PkgInfo{repoInfo, refsInfo, path, targetType, targetName}
 
 	// Rewrite refs
 	if repoInfo.Path == "info/refs" {
-		if n != "" {
-			switch t {
-			case refs.TYPE_TAG:
-				atomic.AddUint64(&counterHits, 1)
-				log.Debug("%s -> T:%s (%s)", path, n, refsInfo.GetTagSHA(n, true))
-			case refs.TYPE_BRANCH:
-				atomic.AddUint64(&counterHits, 1)
-				log.Debug("%s -> B:%s (%s)", path, n, refsInfo.GetBranchSHA(n, true))
-			default:
-				atomic.AddUint64(&counterMisses, 1)
-				log.Warn("%s -> master (proper tag/branch not found)", path)
-			}
-		} else {
-			atomic.AddUint64(&counterMisses, 1)
-			log.Info("%s -> master (no target version)", path)
-		}
-
-		appendProcHeader(ctx, start)
-		ctx.Response.Header.Set("Content-Type", "application/x-git-upload-pack-advertisement")
-		ctx.Write(refsInfo.Rewrite(n, t))
-
+		processRefsRequest(ctx, start, pkgInfo)
 		return
 	}
 
-	pkgInfo := &PkgInfo{repoInfo, n}
-
+	// Return info for "go get" request
 	if len(ctx.FormValue("go-get")) != 0 {
-		appendProcHeader(ctx, start)
-
-		ctx.Response.Header.Add("Content-Type", "text/html")
-
-		err := goGetTemplate.Execute(ctx, pkgInfo)
-
-		if err != nil {
-			atomic.AddUint64(&counterErrors, 1)
-			log.Error("Can't render go get template: %v", err)
-		}
-
-		atomic.AddUint64(&counterGoget, 1)
-
+		processGoGetRequest(ctx, start, pkgInfo)
 		return
 	}
 
@@ -204,7 +172,99 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Redirect to github
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, repoInfo.GitHubURL(n))
+	redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+}
+
+// processBasicRequest redirect requests from main page to page defined in config
+func processBasicRequest(ctx *fasthttp.RequestCtx, start time.Time) {
+	appendProcHeader(ctx, start)
+	redirectRequest(ctx, knf.GetS(HTTP_REDIRECT))
+}
+
+// processMetricsRequest return metrics
+func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
+	appendProcHeader(ctx, start)
+
+	metrics := "{\n"
+	metrics += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&counterHits), 10) + ",\n"
+	metrics += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&counterMisses), 10) + ",\n"
+	metrics += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&counterErrors), 10) + ",\n"
+	metrics += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&counterRedirects), 10) + ",\n"
+	metrics += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&counterDocs), 10) + ",\n"
+	metrics += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&counterGoget), 10) + "\n"
+	metrics += "}\n"
+
+	ctx.WriteString(metrics)
+}
+
+// processDocsRequest redirect request to godoc.org
+func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string) {
+	atomic.AddUint64(&counterDocs, 1)
+	appendProcHeader(ctx, start)
+	redirectRequest(ctx, "https://godoc.org/pkg.re"+path)
+}
+
+// processUploadPackRequest redirect git-upload-pack request to GitHub
+func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInfo *repo.Info) {
+	appendProcHeader(ctx, start)
+	redirectRequest(ctx, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
+}
+
+// processRefsRequest process request for refs
+func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
+	if pkgInfo.TargetName != "" {
+		switch pkgInfo.TargetType {
+		case refs.TYPE_TAG:
+			atomic.AddUint64(&counterHits, 1)
+			log.Debug(
+				"%s -> T:%s (%s)", pkgInfo.Path, pkgInfo.TargetName,
+				pkgInfo.RefsInfo.GetTagSHA(pkgInfo.TargetName, true),
+			)
+		case refs.TYPE_BRANCH:
+			atomic.AddUint64(&counterHits, 1)
+			log.Debug(
+				"%s -> B:%s (%s)", pkgInfo.Path, pkgInfo.TargetName,
+				pkgInfo.RefsInfo.GetBranchSHA(pkgInfo.TargetName, true),
+			)
+		default:
+			atomic.AddUint64(&counterMisses, 1)
+			log.Warn("%s -> master (proper tag/branch not found)", pkgInfo.Path)
+		}
+	} else {
+		atomic.AddUint64(&counterMisses, 1)
+		log.Info("%s -> master (no target version)", pkgInfo.Path)
+	}
+
+	appendProcHeader(ctx, start)
+	ctx.Response.Header.Set("Content-Type", "application/x-git-upload-pack-advertisement")
+	ctx.Write(pkgInfo.RefsInfo.Rewrite(pkgInfo.TargetName, pkgInfo.TargetType))
+}
+
+// processGoGetRequest process "go get" requests
+func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
+	appendProcHeader(ctx, start)
+
+	if pkgInfo.TargetType == refs.TYPE_UNKNOWN {
+		atomic.AddUint64(&counterMisses, 1)
+		ctx.Response.Header.Add("Content-Type", "text/plain; charset=utf-8")
+		ctx.SetStatusCode(http.StatusNotFound)
+		ctx.WriteString(fmt.Sprintf(
+			"GitHub repository at https://%s has no proper branch or tag",
+			pkgInfo.RepoInfo.GitHubRoot()),
+		)
+		return
+	}
+
+	ctx.Response.Header.Add("Content-Type", "text/html; charset=utf-8")
+
+	err := goGetTemplate.Execute(ctx, pkgInfo)
+
+	if err != nil {
+		atomic.AddUint64(&counterErrors, 1)
+		log.Error("Can't render go get template: %v", err)
+	}
+
+	atomic.AddUint64(&counterGoget, 1)
 }
 
 // notFoundResponse write 404 response
@@ -234,20 +294,6 @@ func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
 		appendProcHeader(ctx, start)
 		ctx.SetStatusCode(http.StatusInternalServerError)
 	}
-}
-
-// encodeMetrics encode metrics to JSON
-func encodeMetrics(ctx *fasthttp.RequestCtx) {
-	metrics := "{\n"
-	metrics += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&counterHits), 10) + ",\n"
-	metrics += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&counterMisses), 10) + ",\n"
-	metrics += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&counterErrors), 10) + ",\n"
-	metrics += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&counterRedirects), 10) + ",\n"
-	metrics += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&counterDocs), 10) + ",\n"
-	metrics += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&counterGoget), 10) + "\n"
-	metrics += "}\n"
-
-	ctx.WriteString(metrics)
 }
 
 // fetchRefs downloads and parse refs info from github
