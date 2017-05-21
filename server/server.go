@@ -12,13 +12,13 @@ import (
 	"os"
 	"runtime"
 
-	"pkg.re/essentialkaos/ek.v8/arg"
-	"pkg.re/essentialkaos/ek.v8/fmtc"
-	"pkg.re/essentialkaos/ek.v8/fsutil"
-	"pkg.re/essentialkaos/ek.v8/knf"
-	"pkg.re/essentialkaos/ek.v8/log"
-	"pkg.re/essentialkaos/ek.v8/signal"
-	"pkg.re/essentialkaos/ek.v8/usage"
+	"pkg.re/essentialkaos/ek.v9/fmtc"
+	"pkg.re/essentialkaos/ek.v9/fsutil"
+	"pkg.re/essentialkaos/ek.v9/knf"
+	"pkg.re/essentialkaos/ek.v9/log"
+	"pkg.re/essentialkaos/ek.v9/options"
+	"pkg.re/essentialkaos/ek.v9/signal"
+	"pkg.re/essentialkaos/ek.v9/usage"
 
 	"github.com/essentialkaos/pkgre/server/morpher"
 )
@@ -27,15 +27,15 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "3.3.0"
+	VER  = "3.4.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
 const (
-	ARG_CONFIG   = "c:config"
-	ARG_NO_COLOR = "nc:no-color"
-	ARG_HELP     = "h:help"
-	ARG_VER      = "v:version"
+	OPT_CONFIG   = "c:config"
+	OPT_NO_COLOR = "nc:no-color"
+	OPT_HELP     = "h:help"
+	OPT_VER      = "v:version"
 )
 
 const (
@@ -58,17 +58,17 @@ const (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-var argMap = arg.Map{
-	ARG_CONFIG:   &arg.V{Value: "/etc/morpher.knf"},
-	ARG_NO_COLOR: &arg.V{Type: arg.BOOL},
-	ARG_HELP:     &arg.V{Type: arg.BOOL, Alias: "u:usage"},
-	ARG_VER:      &arg.V{Type: arg.BOOL, Alias: "ver"},
+var optMap = options.Map{
+	OPT_CONFIG:   {Value: "/etc/morpher.knf"},
+	OPT_NO_COLOR: {Type: options.BOOL},
+	OPT_HELP:     {Type: options.BOOL, Alias: "u:usage"},
+	OPT_VER:      {Type: options.BOOL, Alias: "ver"},
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func Init() {
-	_, errs := arg.Parse(argMap)
+	_, errs := options.Parse(optMap)
 
 	if len(errs) != 0 {
 		printError("Arguments parsing errors:")
@@ -80,21 +80,21 @@ func Init() {
 		os.Exit(1)
 	}
 
-	if arg.GetB(ARG_NO_COLOR) {
+	if options.GetB(OPT_NO_COLOR) {
 		fmtc.DisableColors = true
 	}
 
-	if arg.GetB(ARG_VER) {
+	if options.GetB(OPT_VER) {
 		showAbout()
 		return
 	}
 
-	if arg.GetB(ARG_HELP) {
+	if options.GetB(OPT_HELP) {
 		showUsage()
 		return
 	}
 
-	err := knf.Global(arg.GetS(ARG_CONFIG))
+	err := knf.Global(options.GetS(OPT_CONFIG))
 
 	if err != nil {
 		printError(err.Error())
@@ -227,10 +227,10 @@ func hupSignalHandler() {
 func showUsage() {
 	info := usage.NewInfo("")
 
-	info.AddOption(ARG_CONFIG, "Path to config file", "file")
-	info.AddOption(ARG_NO_COLOR, "Disable colors in output")
-	info.AddOption(ARG_HELP, "Show this help message")
-	info.AddOption(ARG_VER, "Show version")
+	info.AddOption(OPT_CONFIG, "Path to config file", "file")
+	info.AddOption(OPT_NO_COLOR, "Disable colors in output")
+	info.AddOption(OPT_HELP, "Show this help message")
+	info.AddOption(OPT_VER, "Show version")
 
 	info.Render()
 }
