@@ -7,7 +7,6 @@ _Before opening an issue, search for similar bug reports or feature requests on 
 * **Version used (`morpher-server -v`):** 
 * **OS (`cat /etc/*-release`):** 
 * **Kernel (`uname -a`):** 
-* **Go version (`go version`):** 
 * **Install tools:** 
 
 **System info:**
