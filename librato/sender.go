@@ -12,17 +12,17 @@ import (
 	"os"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v8/arg"
-	"pkg.re/essentialkaos/ek.v8/knf"
-	"pkg.re/essentialkaos/ek.v8/req"
+	"pkg.re/essentialkaos/ek.v9/knf"
+	"pkg.re/essentialkaos/ek.v9/options"
+	"pkg.re/essentialkaos/ek.v9/req"
 
-	"pkg.re/essentialkaos/librato.v6"
+	"pkg.re/essentialkaos/librato.v7"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
-	ARG_CONFIG = "c:config"
+	OPT_CONFIG = "c:config"
 )
 
 const (
@@ -46,14 +46,14 @@ type Metrics struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-var argMap = arg.Map{
-	ARG_CONFIG: &arg.V{Value: "/etc/morpher-librato.knf"},
+var optMap = options.Map{
+	OPT_CONFIG: {Value: "/etc/morpher-librato.knf"},
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func Init() {
-	_, errs := arg.Parse(argMap)
+	_, errs := options.Parse(optMap)
 
 	if len(errs) != 0 {
 		fmt.Println("Arguments parsing errors:")
@@ -65,7 +65,7 @@ func Init() {
 		os.Exit(1)
 	}
 
-	err := knf.Global(arg.GetS(ARG_CONFIG))
+	err := knf.Global(options.GetS(OPT_CONFIG))
 
 	if err != nil {
 		fmt.Println(err.Error())

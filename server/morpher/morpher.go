@@ -18,10 +18,10 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v8/knf"
-	"pkg.re/essentialkaos/ek.v8/log"
-	"pkg.re/essentialkaos/ek.v8/sortutil"
-	"pkg.re/essentialkaos/ek.v8/version"
+	"pkg.re/essentialkaos/ek.v9/knf"
+	"pkg.re/essentialkaos/ek.v9/log"
+	"pkg.re/essentialkaos/ek.v9/sortutil"
+	"pkg.re/essentialkaos/ek.v9/version"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
@@ -37,7 +37,7 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.3"
+const USER_AGENT = "PkgRE-Morpher/3.4"
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
