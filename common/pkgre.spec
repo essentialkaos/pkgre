@@ -51,7 +51,7 @@
 Summary:         pkg.re morpher server
 Name:            pkgre
 Version:         3.4.0
-Release:         0%{?dist}
+Release:         1%{?dist}
 Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
@@ -60,9 +60,9 @@ Source0:         https://source.kaos.io/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:   golang >= 1.8
+BuildRequires:   golang >= 1.9
 
-Requires:        kaosv >= 2.10
+Requires:        kaosv >= 2.13
 
 Provides:        %{name} = %{version}-%{release}
 
@@ -156,6 +156,10 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Fri Oct 13 2017 Anton Novojilov <andy@essentialkaos.com> - 3.4.0-1
+- Improved init script
+- Improved spec
+
 * Sun May 21 2017 Anton Novojilov <andy@essentialkaos.com> - 3.4.0-0
 - ek package updated to v9
 - librato package updated to v7
