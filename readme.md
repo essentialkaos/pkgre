@@ -21,7 +21,7 @@ git config --global http.https://pkg.re.followRedirects true
 
 _You can set this property for earlier versions as well._
 
-For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect the request to Github, without touching any byte of source code_).
+For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect all requests to Github, execept request's from GoDoc service_).
 
 ### Routing examples
 

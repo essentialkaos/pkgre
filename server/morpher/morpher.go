@@ -23,6 +23,8 @@ import (
 	"pkg.re/essentialkaos/ek.v9/sortutil"
 	"pkg.re/essentialkaos/ek.v9/version"
 
+	"github.com/orcaman/concurrent-map"
+
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
 
@@ -37,7 +39,9 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.4"
+const USER_AGENT = "PkgRE-Morpher/3.5"
+
+const MAX_GODOC_IP_STORE = 3600 // 1 hour
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -83,11 +87,15 @@ var (
 // client for proxying requests to GitHub.com
 var proxyClient *fasthttp.Client
 
+// map with godoc ip's
+var godocIPStore cmap.ConcurrentMap
+
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Start start HTTP server
 func Start() error {
 	initHTTPClients()
+	initGoDocIPStore()
 
 	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
 
@@ -111,6 +119,34 @@ func initHTTPClients() {
 		ReadTimeout:         15 * time.Second,
 		WriteTimeout:        15 * time.Second,
 		MaxConnsPerHost:     50,
+	}
+}
+
+func initGoDocIPStore() {
+	godocIPStore = cmap.New()
+
+	go startGoDocStoreJanitor()
+}
+
+func startGoDocStoreJanitor() {
+	for {
+		time.Sleep(time.Hour)
+
+		now := time.Now().Unix()
+		ips := godocIPStore.Keys()
+
+		for _, ip := range ips {
+			lastSeen, ok := godocIPStore.Get(ip)
+
+			if !ok {
+				continue
+			}
+
+			// Remove records older than 1 hour
+			if now-lastSeen.(int64) >= MAX_GODOC_IP_STORE {
+				godocIPStore.Remove(ip)
+			}
+		}
 	}
 }
 
@@ -175,6 +211,11 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Return info for "go get" request
 	if len(ctx.FormValue("go-get")) != 0 {
+		// Request came from GoDoc, save IP
+		if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
+			godocIPStore.SetIfAbsent(ctx.RemoteIP().String(), time.Now().Unix())
+		}
+
 		processGoGetRequest(ctx, start, pkgInfo)
 		return
 	}
@@ -184,8 +225,8 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	// Redirect to github
 	appendProcHeader(ctx, start)
 
-	// Proxying allowed only for GoDoc bot
-	if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
+	// Request came from GoDoc IP
+	if godocIPStore.Has(ctx.RemoteIP().String()) {
 		proxyRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
 	} else {
 		redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
