@@ -27,7 +27,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "3.4.0"
+	VER  = "3.5.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -127,7 +127,7 @@ func validateConfig() {
 		if !fsutil.CheckPerms(value.(string), config.GetS(prop)) {
 			switch value.(string) {
 			case "DWX":
-				return fmt.Errorf("Property %s must be path to writable directory.", prop)
+				return fmt.Errorf("Property %s must be path to writable directory", prop)
 			}
 		}
 

@@ -80,11 +80,14 @@ var (
 	counterGoget     uint64
 )
 
+// client for proxying requests to GitHub.com
+var proxyClient *fasthttp.Client
+
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Start start HTTP server
 func Start() error {
-	initHTTPClient()
+	initHTTPClients()
 
 	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
 
@@ -93,13 +96,21 @@ func Start() error {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-func initHTTPClient() {
+func initHTTPClients() {
 	client = &fasthttp.Client{
 		Name:                USER_AGENT,
-		MaxIdleConnDuration: time.Second,
-		ReadTimeout:         time.Second,
-		WriteTimeout:        time.Second,
+		MaxIdleConnDuration: 5 * time.Second,
+		ReadTimeout:         3 * time.Second,
+		WriteTimeout:        3 * time.Second,
 		MaxConnsPerHost:     150,
+	}
+
+	proxyClient = &fasthttp.Client{
+		Name:                USER_AGENT,
+		MaxIdleConnDuration: 10 * time.Second,
+		ReadTimeout:         15 * time.Second,
+		WriteTimeout:        15 * time.Second,
+		MaxConnsPerHost:     50,
 	}
 }
 
@@ -172,7 +183,13 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Redirect to github
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+
+	// Proxying allowed only for GoDoc bot
+	if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
+		proxyRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+	} else {
+		redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+	}
 }
 
 // processBasicRequest redirect requests from main page to page defined in config
@@ -283,6 +300,20 @@ func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
 func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Set("Location", url)
 	ctx.SetStatusCode(http.StatusTemporaryRedirect)
+}
+
+// proxyRequest proxy request to GitHub
+func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
+	ctx.Request.Header.Del("Connection")
+	ctx.Request.SetRequestURI(url)
+
+	err := proxyClient.Do(&ctx.Request, &ctx.Response)
+
+	if err != nil {
+		log.Error("Can't proxy request to %s", url)
+	}
+
+	ctx.Response.Header.Del("Connection")
 }
 
 // requestRecover recover panic in request
