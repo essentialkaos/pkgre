@@ -31,7 +31,8 @@ kv.addHandler "start" "startServiceHandler"
 kv.addHandler "stop"  "stopServiceHandler"
 
 kv.addHandler "start"    "preStartServiceHandler" "pre"
-kv.disableOutputRedirect "preStartServiceHandler" "pre"
+
+kv.disableOutputRedirect "start" "pre"
 
 ###############################################################################
 

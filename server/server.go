@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"pkg.re/essentialkaos/ek.v9/fmtc"
 	"pkg.re/essentialkaos/ek.v9/fsutil"
@@ -103,6 +104,7 @@ func Init() {
 
 	prepare()
 
+	log.Aux(strings.Repeat("-", 88))
 	log.Aux("Starting %s %s...", APP, VER)
 
 	start()

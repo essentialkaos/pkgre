@@ -213,7 +213,9 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	if len(ctx.FormValue("go-get")) != 0 {
 		// Request came from GoDoc, save IP
 		if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
-			godocIPStore.SetIfAbsent(ctx.RemoteIP().String(), time.Now().Unix())
+			ip := getRealIP(ctx)
+			godocIPStore.Set(ip, time.Now().Unix())
+			log.Debug("Got request from GoDoc (IP: %s)", ip)
 		}
 
 		processGoGetRequest(ctx, start, pkgInfo)
@@ -225,11 +227,15 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	// Redirect to github
 	appendProcHeader(ctx, start)
 
+	url := repoInfo.GitHubURL(pkgInfo.TargetName)
+
 	// Request came from GoDoc IP
-	if godocIPStore.Has(ctx.RemoteIP().String()) {
-		proxyRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+	if godocIPStore.Has(getRealIP(ctx)) {
+		log.Debug("Proxying request to %s", url)
+		proxyRequest(ctx, url)
 	} else {
-		redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+		log.Debug("Redirecting request to %s", url)
+		redirectRequest(ctx, url)
 	}
 }
 
@@ -265,7 +271,17 @@ func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string) 
 // processUploadPackRequest redirect git-upload-pack request to GitHub
 func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInfo *repo.Info) {
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
+
+	url := "https://" + repoInfo.GitHubRoot() + "/git-upload-pack"
+
+	// Request came from GoDoc IP
+	if godocIPStore.Has(getRealIP(ctx)) {
+		log.Debug("Proxying GoDoc git-upload-pack request to %s", url)
+		proxyRequest(ctx, url)
+	} else {
+		log.Debug("Redirecting git-upload-pack request to %s", url)
+		redirectRequest(ctx, url)
+	}
 }
 
 // processRefsRequest process request for refs
@@ -377,7 +393,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	)
 
 	if statusCode != 200 {
-		return nil, fmt.Errorf("GitHub return status code <%s>", statusCode)
+		return nil, fmt.Errorf("GitHub return status code <%d>", statusCode)
 	}
 
 	if len(refsData) == 0 {
@@ -461,4 +477,15 @@ func getCleanVer(v string) string {
 	}
 
 	return vf[1]
+}
+
+// getRealIP return remote IP
+func getRealIP(ctx *fasthttp.RequestCtx) string {
+	xRealIP := string(ctx.Request.Header.Peek("X-Real-IP"))
+
+	if xRealIP != "" {
+		return xRealIP
+	}
+
+	return ctx.RemoteIP().String()
 }

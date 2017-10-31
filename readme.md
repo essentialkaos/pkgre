@@ -21,7 +21,7 @@ git config --global http.https://pkg.re.followRedirects true
 
 _You can set this property for earlier versions as well._
 
-For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect all requests to Github, execept [request's from GoDoc service](server/morpher/morpher.go#L229)_).
+For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect all requests to Github, execept request's from GoDoc service_).
 
 ### Routing examples
 
@@ -30,7 +30,7 @@ go get pkg.re/essentialkaos/ek.v1      → github.com/essentialkaos/ek tag/branc
 go get pkg.re/essentialkaos/ek.v1.6    → github.com/essentialkaos/ek tag/branch v1.6.x
 go get pkg.re/essentialkaos/ek.v1.6.8  → github.com/essentialkaos/ek tag/branch v1.6.8
 go get pkg.re/essentialkaos/ek.develop → github.com/essentialkaos/ek tag/branch develop
-go get pkg.re/check.v1                 → github.com/essentialkaos/go-check/check tag/branch v1.x.x
+go get pkg.re/check.v1                 → github.com/go-check/check tag/branch v1.x.x
 https://pkg.re/essentialkaos/ek.v1     → https://github.com/essentialkaos/ek/tree/v1.x.x
 ```
 
