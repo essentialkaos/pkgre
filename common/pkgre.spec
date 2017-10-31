@@ -157,7 +157,7 @@ rm -rf %{buildroot}
 
 %changelog
 * Tue Oct 31 2017 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-0
-- Proxy requests from GoDoc to GitHub
+- Proxying request's from GoDoc to GitHub
 
 * Fri Oct 13 2017 Anton Novojilov <andy@essentialkaos.com> - 3.4.0-1
 - Improved init script
