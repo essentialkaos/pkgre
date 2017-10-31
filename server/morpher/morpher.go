@@ -23,6 +23,8 @@ import (
 	"pkg.re/essentialkaos/ek.v9/sortutil"
 	"pkg.re/essentialkaos/ek.v9/version"
 
+	"github.com/orcaman/concurrent-map"
+
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
 
@@ -37,7 +39,9 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.4"
+const USER_AGENT = "PkgRE-Morpher/3.5"
+
+const MAX_GODOC_IP_STORE = 3600 // 1 hour
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -80,11 +84,18 @@ var (
 	counterGoget     uint64
 )
 
+// client for proxying requests to GitHub.com
+var proxyClient *fasthttp.Client
+
+// map with godoc ip's
+var godocIPStore cmap.ConcurrentMap
+
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Start start HTTP server
 func Start() error {
-	initHTTPClient()
+	initHTTPClients()
+	initGoDocIPStore()
 
 	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
 
@@ -93,13 +104,49 @@ func Start() error {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-func initHTTPClient() {
+func initHTTPClients() {
 	client = &fasthttp.Client{
 		Name:                USER_AGENT,
-		MaxIdleConnDuration: time.Second,
-		ReadTimeout:         time.Second,
-		WriteTimeout:        time.Second,
+		MaxIdleConnDuration: 5 * time.Second,
+		ReadTimeout:         3 * time.Second,
+		WriteTimeout:        3 * time.Second,
 		MaxConnsPerHost:     150,
+	}
+
+	proxyClient = &fasthttp.Client{
+		Name:                USER_AGENT,
+		MaxIdleConnDuration: 10 * time.Second,
+		ReadTimeout:         15 * time.Second,
+		WriteTimeout:        15 * time.Second,
+		MaxConnsPerHost:     50,
+	}
+}
+
+func initGoDocIPStore() {
+	godocIPStore = cmap.New()
+
+	go startGoDocStoreJanitor()
+}
+
+func startGoDocStoreJanitor() {
+	for {
+		time.Sleep(time.Hour)
+
+		now := time.Now().Unix()
+		ips := godocIPStore.Keys()
+
+		for _, ip := range ips {
+			lastSeen, ok := godocIPStore.Get(ip)
+
+			if !ok {
+				continue
+			}
+
+			// Remove records older than 1 hour
+			if now-lastSeen.(int64) >= MAX_GODOC_IP_STORE {
+				godocIPStore.Remove(ip)
+			}
+		}
 	}
 }
 
@@ -164,6 +211,13 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Return info for "go get" request
 	if len(ctx.FormValue("go-get")) != 0 {
+		// Request came from GoDoc, save IP
+		if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
+			ip := getRealIP(ctx)
+			godocIPStore.Set(ip, time.Now().Unix())
+			log.Debug("Got request from GoDoc (IP: %s)", ip)
+		}
+
 		processGoGetRequest(ctx, start, pkgInfo)
 		return
 	}
@@ -172,7 +226,17 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Redirect to github
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, repoInfo.GitHubURL(pkgInfo.TargetName))
+
+	url := repoInfo.GitHubURL(pkgInfo.TargetName)
+
+	// Request came from GoDoc IP
+	if godocIPStore.Has(getRealIP(ctx)) {
+		log.Debug("Proxying request to %s", url)
+		proxyRequest(ctx, url)
+	} else {
+		log.Debug("Redirecting request to %s", url)
+		redirectRequest(ctx, url)
+	}
 }
 
 // processBasicRequest redirect requests from main page to page defined in config
@@ -207,7 +271,17 @@ func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string) 
 // processUploadPackRequest redirect git-upload-pack request to GitHub
 func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInfo *repo.Info) {
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, "https://"+repoInfo.GitHubRoot()+"/git-upload-pack")
+
+	url := "https://" + repoInfo.GitHubRoot() + "/git-upload-pack"
+
+	// Request came from GoDoc IP
+	if godocIPStore.Has(getRealIP(ctx)) {
+		log.Debug("Proxying GoDoc git-upload-pack request to %s", url)
+		proxyRequest(ctx, url)
+	} else {
+		log.Debug("Redirecting git-upload-pack request to %s", url)
+		redirectRequest(ctx, url)
+	}
 }
 
 // processRefsRequest process request for refs
@@ -285,6 +359,20 @@ func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.SetStatusCode(http.StatusTemporaryRedirect)
 }
 
+// proxyRequest proxy request to GitHub
+func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
+	ctx.Request.Header.Del("Connection")
+	ctx.Request.SetRequestURI(url)
+
+	err := proxyClient.Do(&ctx.Request, &ctx.Response)
+
+	if err != nil {
+		log.Error("Can't proxy request to %s", url)
+	}
+
+	ctx.Response.Header.Del("Connection")
+}
+
 // requestRecover recover panic in request
 func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
 	r := recover()
@@ -305,7 +393,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	)
 
 	if statusCode != 200 {
-		return nil, fmt.Errorf("GitHub return status code <%s>", statusCode)
+		return nil, fmt.Errorf("GitHub return status code <%d>", statusCode)
 	}
 
 	if len(refsData) == 0 {
@@ -389,4 +477,15 @@ func getCleanVer(v string) string {
 	}
 
 	return vf[1]
+}
+
+// getRealIP return remote IP
+func getRealIP(ctx *fasthttp.RequestCtx) string {
+	xRealIP := string(ctx.Request.Header.Peek("X-Real-IP"))
+
+	if xRealIP != "" {
+		return xRealIP
+	}
+
+	return ctx.RemoteIP().String()
 }

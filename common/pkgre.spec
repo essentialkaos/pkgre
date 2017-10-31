@@ -50,8 +50,8 @@
 
 Summary:         pkg.re morpher server
 Name:            pkgre
-Version:         3.4.0
-Release:         1%{?dist}
+Version:         3.5.0
+Release:         0%{?dist}
 Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
@@ -156,6 +156,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Tue Oct 31 2017 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-0
+- Proxying request's from GoDoc to GitHub
+
 * Fri Oct 13 2017 Anton Novojilov <andy@essentialkaos.com> - 3.4.0-1
 - Improved init script
 - Improved spec

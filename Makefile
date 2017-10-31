@@ -19,6 +19,7 @@ morpher-server:
 
 deps:
 	git config --global http.https://pkg.re.followRedirects true
+	go get -d -v github.com/orcaman/concurrent-map
 	go get -d -v github.com/valyala/fasthttp
 	go get -d -v pkg.re/essentialkaos/ek.v9
 	go get -d -v pkg.re/essentialkaos/librato.v7
