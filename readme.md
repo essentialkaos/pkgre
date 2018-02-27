@@ -1,4 +1,4 @@
-# `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre) [![codebeat badge](https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9)](https://codebeat.co/projects/github-com-essentialkaos-pkgre-master) [![License](https://gh.kaos.io/ekol.svg)](https://essentialkaos.com/ekol)
+# `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre) [![codebeat badge](https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9)](https://codebeat.co/projects/github-com-essentialkaos-pkgre-master) [![License](https://gh.kaos.st/ekol.svg)](https://essentialkaos.com/ekol)
 
 The [pkg.re](https://pkg.re) service provides versioned URLs that offer the proper metadata for redirecting the go tool onto well defined GitHub repositories. Developers that choose to use this service are strongly encouraged to not make any backwards incompatible changes without also changing the version in the package URL. This convention improves the chances that dependent code will continue to work while depended upon packages evolve.
 
@@ -44,4 +44,4 @@ Before contributing to this project please read our [Contributing Guidelines](ht
 
 [EKOL](https://essentialkaos.com/ekol)
 
-<p align="center"><a href="https://essentialkaos.com"><img src="https://gh.kaos.io/ekgh.svg"/></a></p>
+<p align="center"><a href="https://essentialkaos.com"><img src="https://gh.kaos.st/ekgh.svg"/></a></p>
