@@ -56,7 +56,7 @@ Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
 
-Source0:         https://source.kaos.io/pkgre/%{name}-%{version}.tar.bz2
+Source0:         https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
