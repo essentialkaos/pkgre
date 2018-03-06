@@ -51,7 +51,7 @@
 Summary:         pkg.re morpher server
 Name:            pkgre
 Version:         3.5.0
-Release:         0%{?dist}
+Release:         1%{?dist}
 Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
@@ -60,9 +60,9 @@ Source0:         https://source.kaos.io/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:   golang >= 1.9
+BuildRequires:   golang >= 1.10
 
-Requires:        kaosv >= 2.13
+Requires:        kaosv >= 2.15
 
 Provides:        %{name} = %{version}-%{release}
 
@@ -156,6 +156,11 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Tue Mar 06 2018 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-1
+- Rebuilt with Go 1.10
+- ek package updated to latest release
+- fasthttp package updated to latest release
+
 * Tue Oct 31 2017 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-0
 - Proxying request's from GoDoc to GitHub
 
