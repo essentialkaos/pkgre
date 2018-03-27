@@ -50,8 +50,8 @@
 
 Summary:         pkg.re morpher server
 Name:            pkgre
-Version:         3.5.0
-Release:         1%{?dist}
+Version:         3.6.0
+Release:         0%{?dist}
 Group:           Applications/System
 License:         EKOL
 URL:             https://github.com/essentialkaos/pkgre
@@ -156,6 +156,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Wed Mar 28 2018 Anton Novojilov <andy@essentialkaos.com> - 3.6.0-0
+- fasthttp package replaced by erikdubbelboer fork
+
 * Tue Mar 06 2018 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-1
 - Rebuilt with Go 1.10
 - ek package updated to latest release

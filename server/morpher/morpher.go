@@ -28,7 +28,7 @@ import (
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
 
-	"github.com/valyala/fasthttp"
+	"github.com/erikdubbelboer/fasthttp"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -39,7 +39,7 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.5"
+const USER_AGENT = "PkgRE-Morpher/3.6"
 
 const MAX_GODOC_IP_STORE = 3600 // 1 hour
 
