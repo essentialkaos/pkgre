@@ -165,7 +165,7 @@ if [[ $1 -eq 1 ]] ; then
   %{__sysctl} enable morpher.service &>/dev/null || :
 %else
   %{__chkconfig} --add morpher &>/dev/null || :
-  %{__chkconfig} on morpher &>/dev/null || :
+  %{__chkconfig} morpher on &>/dev/null || :
 %endif
 fi
 

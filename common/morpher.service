@@ -3,7 +3,7 @@ Description=Morpher Daemon
 After=syslog.target network.target
 
 [Service]
-Type=notify
+Type=simple
 ExecStart=/usr/bin/morpher-server -c /etc/morpher.knf
 KillSignal=SIGTERM
 User=morpher
