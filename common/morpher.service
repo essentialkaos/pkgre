@@ -6,6 +6,7 @@ After=syslog.target network.target
 Type=simple
 ExecStart=/usr/bin/morpher-server -c /etc/morpher.knf
 KillSignal=SIGTERM
+LimitNOFILE=10240
 User=morpher
 Group=morpher
 PIDFile=/var/run/pkgre/morpher/morpher.pid

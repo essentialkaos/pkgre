@@ -210,6 +210,7 @@ rm -rf %{buildroot}
 %changelog
 * Wed Mar 28 2018 Anton Novojilov <andy@essentialkaos.com> - 3.6.0-0
 - fasthttp package replaced by erikdubbelboer fork
+- Added files limit to init script and systmed unit
 - Added systemd unit
 - Added autostart
 
