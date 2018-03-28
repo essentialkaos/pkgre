@@ -4,6 +4,10 @@
 
 ###############################################################################
 
+%define  debug_package %{nil}
+
+###############################################################################
+
 %define _posixroot        /
 %define _root             /root
 %define _bin              /bin
@@ -36,9 +40,9 @@
 %define _rpmstatedir      %{_sharedstatedir}/rpm-state
 %define _pkgconfigdir     %{_libdir}/pkgconfig
 
-###############################################################################
-
-%define  debug_package %{nil}
+%define __service         %{_sbin}/service
+%define __chkconfig       %{_sbin}/chkconfig
+%define __sysctl          %{_bindir}/systemctl
 
 ###############################################################################
 
@@ -48,23 +52,40 @@
 
 ###############################################################################
 
-Summary:         pkg.re morpher server
-Name:            pkgre
-Version:         3.5.0
-Release:         1%{?dist}
-Group:           Applications/System
-License:         EKOL
-URL:             https://github.com/essentialkaos/pkgre
+Summary:            pkg.re morpher server
+Name:               pkgre
+Version:            3.6.0
+Release:            0%{?dist}
+Group:              Applications/System
+License:            EKOL
+URL:                https://github.com/essentialkaos/pkgre
 
-Source0:         https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
+Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
-BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:   golang >= 1.10
+BuildRequires:      golang >= 1.10
 
-Requires:        kaosv >= 2.15
+%if 0%{?rhel} >= 7
+Requires:           systemd
+%else
+Requires:           kaosv >= 2.15
+%endif
 
-Provides:        %{name} = %{version}-%{release}
+%if 0%{?rhel} >= 7
+Requires(pre):      shadow-utils
+Requires(post):     systemd
+Requires(preun):    systemd
+Requires(postun):   systemd
+%else
+Requires(pre):      shadow-utils
+Requires(post):     chkconfig
+Requires(preun):    chkconfig
+Requires(preun):    initscripts
+Requires(postun):   initscripts
+%endif
+
+Provides:           %{name} = %{version}-%{release}
 
 ###############################################################################
 
@@ -75,10 +96,10 @@ pkg.re service morpher server.
 
 %package librato
 
-Summary:           Tool for sending morpher metrics to Librato
-Group:             Applications/System
+Summary:            Tool for sending morpher metrics to Librato
+Group:              Applications/System
 
-Requires:          pkgre = %{version}
+Requires:           pkgre = %{version}
 
 %description librato
 Tool for sending morpher metrics to Librato.
@@ -92,7 +113,7 @@ Tool for sending morpher metrics to Librato.
 export GOPATH=$(pwd) 
 
 pushd src/github.com/essentialkaos/%{name}
-  %{__make} %{?_smp_mflags}
+  %{__make} %{?_smp_mflags} all
 popd
 
 %install
@@ -102,7 +123,6 @@ install -dm 755 %{buildroot}%{_bindir}
 install -dm 755 %{buildroot}%{_sysconfdir}
 install -dm 755 %{buildroot}%{_sysconfdir}/cron.d
 install -dm 755 %{buildroot}%{_sysconfdir}/logrotate.d
-install -dm 755 %{buildroot}%{_initddir}
 install -dm 755 %{buildroot}%{_logdir}
 install -dm 755 %{buildroot}%{_logdir}/%{name}/morpher
 
@@ -121,8 +141,15 @@ install -pm 644 %{srcdir}/common/morpher-librato.knf \
 install -pm 644 %{srcdir}/common/morpher-librato.cron \
                 %{buildroot}%{_sysconfdir}/cron.d/morpher-librato
 
+%if 0%{?rhel} >= 7
+install -dm 755 %{buildroot}%{_unitdir}
+install -pm 644 %{srcdir}/common/morpher.service \
+                %{buildroot}%{_unitdir}/
+%else
+install -dm 755 %{buildroot}%{_initddir}
 install -pm 755 %{srcdir}/common/morpher.init \
                 %{buildroot}%{_initddir}/morpher
+%endif
 
 install -pm 755 %{srcdir}/common/morpher.logrotate \
                 %{buildroot}%{_sysconfdir}/logrotate.d/morpher
@@ -131,6 +158,27 @@ install -pm 755 %{srcdir}/common/morpher.logrotate \
 getent group %{morpher_group} >/dev/null || groupadd -r %{morpher_group}
 getent passwd %{morpher_user} >/dev/null || useradd -r -M -g %{morpher_group} -s /sbin/nologin %{morpher_user}
 exit 0
+
+%post
+if [[ $1 -eq 1 ]] ; then
+%if 0%{?rhel} >= 7
+  %{__sysctl} enable morpher.service &>/dev/null || :
+%else
+  %{__chkconfig} --add morpher &>/dev/null || :
+  %{__chkconfig} morpher on &>/dev/null || :
+%endif
+fi
+
+%preun
+if [[ $1 -eq 0 ]] ; then
+%if 0%{?rhel} >= 7
+  %{__sysctl} --no-reload disable morpher.service &>/dev/null || :
+  %{__sysctl} stop morpher.service &>/dev/null || :
+%else
+  %{__service} morpher stop &> /dev/null || :
+  %{__chkconfig} --del morpher &> /dev/null || :
+%endif
+fi
 
 %clean
 rm -rf %{buildroot}
@@ -141,10 +189,14 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %doc LICENSE.EN LICENSE.RU
 %attr(-,%{morpher_user},%{morpher_group}) %dir %{_logdir}/%{name}/morpher/
-%{_initddir}/morpher
 %config(noreplace) %{_sysconfdir}/morpher.knf
 %config(noreplace) %{_sysconfdir}/logrotate.d/morpher
 %{_bindir}/morpher-server
+%if 0%{?rhel} <= 6
+%{_initrddir}/morpher
+%else
+%{_unitdir}/morpher.service
+%endif
 
 %files librato
 %defattr(-,root,root,-)
@@ -156,6 +208,12 @@ rm -rf %{buildroot}
 ###############################################################################
 
 %changelog
+* Wed Mar 28 2018 Anton Novojilov <andy@essentialkaos.com> - 3.6.0-0
+- fasthttp package replaced by erikdubbelboer fork
+- Added files limit to init script and systmed unit
+- Added systemd unit
+- Added autostart
+
 * Tue Mar 06 2018 Anton Novojilov <andy@essentialkaos.com> - 3.5.0-1
 - Rebuilt with Go 1.10
 - ek package updated to latest release

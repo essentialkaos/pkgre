@@ -22,6 +22,7 @@ kv[search_pattern]="morpher-server"
 binary="/usr/bin/morpher-server"
 conf_file="/etc/morpher.knf"
 
+kv[file_limit]="10240:10240"
 kv[user]="morpher"
 kv[pid_dir]="/var/run/pkgre/morpher"
 
