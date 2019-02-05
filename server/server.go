@@ -2,7 +2,7 @@ package server
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                     Copyright (c) 2009-2018 ESSENTIAL KAOS                         //
+//                     Copyright (c) 2009-2019 ESSENTIAL KAOS                         //
 //        Essential Kaos Open Source License <https://essentialkaos.com/ekol>         //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -13,13 +13,13 @@ import (
 	"runtime"
 	"strings"
 
-	"pkg.re/essentialkaos/ek.v9/fmtc"
-	"pkg.re/essentialkaos/ek.v9/fsutil"
-	"pkg.re/essentialkaos/ek.v9/knf"
-	"pkg.re/essentialkaos/ek.v9/log"
-	"pkg.re/essentialkaos/ek.v9/options"
-	"pkg.re/essentialkaos/ek.v9/signal"
-	"pkg.re/essentialkaos/ek.v9/usage"
+	"pkg.re/essentialkaos/ek.v10/fmtc"
+	"pkg.re/essentialkaos/ek.v10/fsutil"
+	"pkg.re/essentialkaos/ek.v10/knf"
+	"pkg.re/essentialkaos/ek.v10/log"
+	"pkg.re/essentialkaos/ek.v10/options"
+	"pkg.re/essentialkaos/ek.v10/signal"
+	"pkg.re/essentialkaos/ek.v10/usage"
 
 	"github.com/essentialkaos/pkgre/server/morpher"
 )
@@ -28,7 +28,7 @@ import (
 
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "3.6.0"
+	VER  = "3.7.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -179,7 +179,7 @@ func start() {
 
 	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
 
-	err := morpher.Start()
+	err := morpher.Start(VER)
 
 	if err != nil {
 		log.Crit(err.Error())

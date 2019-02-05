@@ -48,13 +48,13 @@
 
 %define morpher_user      morpher
 %define morpher_group     morpher
-%define srcdir            src/github.com/essentialkaos/%{name}
+%define src_dir           src/github.com/essentialkaos/%{name}
 
 ################################################################################
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            3.6.0
+Version:            3.7.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            EKOL
@@ -64,7 +64,7 @@ Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:      golang >= 1.10
+BuildRequires:      golang >= 1.11
 
 %if 0%{?rhel} >= 7
 Requires:           systemd
@@ -126,32 +126,32 @@ install -dm 755 %{buildroot}%{_sysconfdir}/logrotate.d
 install -dm 755 %{buildroot}%{_logdir}
 install -dm 755 %{buildroot}%{_logdir}/%{name}/morpher
 
-install -pm 755 %{srcdir}/morpher-server \
+install -pm 755 %{src_dir}/morpher-server \
                 %{buildroot}%{_bindir}/
 
-install -pm 755 %{srcdir}/morpher-librato \
+install -pm 755 %{src_dir}/morpher-librato \
                 %{buildroot}%{_bindir}/
 
-install -pm 644 %{srcdir}/common/morpher.knf \
+install -pm 644 %{src_dir}/common/morpher.knf \
                 %{buildroot}%{_sysconfdir}/
 
-install -pm 644 %{srcdir}/common/morpher-librato.knf \
+install -pm 644 %{src_dir}/common/morpher-librato.knf \
                 %{buildroot}%{_sysconfdir}/
 
-install -pm 644 %{srcdir}/common/morpher-librato.cron \
+install -pm 644 %{src_dir}/common/morpher-librato.cron \
                 %{buildroot}%{_sysconfdir}/cron.d/morpher-librato
 
 %if 0%{?rhel} >= 7
 install -dm 755 %{buildroot}%{_unitdir}
-install -pm 644 %{srcdir}/common/morpher.service \
+install -pm 644 %{src_dir}/common/morpher.service \
                 %{buildroot}%{_unitdir}/
 %else
 install -dm 755 %{buildroot}%{_initddir}
-install -pm 755 %{srcdir}/common/morpher.init \
+install -pm 755 %{src_dir}/common/morpher.init \
                 %{buildroot}%{_initddir}/morpher
 %endif
 
-install -pm 755 %{srcdir}/common/morpher.logrotate \
+install -pm 755 %{src_dir}/common/morpher.logrotate \
                 %{buildroot}%{_sysconfdir}/logrotate.d/morpher
 
 %pre
@@ -208,6 +208,12 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Tue Feb 05 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.0-0
+- ek package updated to v10
+- librato package updated to v8
+- fasthttp package replaced by original package
+- Code refactoring
+
 * Wed Mar 28 2018 Anton Novojilov <andy@essentialkaos.com> - 3.6.0-0
 - fasthttp package replaced by erikdubbelboer fork
 - Added files limit to init script and systmed unit
