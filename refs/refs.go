@@ -248,31 +248,26 @@ func formatSHA(sha string, short bool) string {
 
 // rewriteHeadRefs return head line with new head refs
 func rewriteHeadRefs(head, refName, refSHA string) string {
-	var result []string
-
 	headSlice := strings.Split(head, " ")
 
-	for index, headPart := range headSlice {
-		if index == 0 {
-			result = append(result, refSHA)
-			continue
+	for i, headPart := range headSlice {
+		if i == 0 {
+			headSlice[i] = refSHA
 		}
 
 		if strings.HasPrefix(headPart, "symref=") {
 			if strings.HasPrefix(refName, "refs/heads/") {
-				result = append(result, "symref=HEAD:"+refName)
+				headSlice[i] = "symref=HEAD:" + refName
 			} else {
-				result = append(result, headPart)
+				headSlice[i] = headPart
 			}
 
-			result = append(result, "oldref="+headPart[7:])
-			continue
+			headSlice[i] += " oldref=" + headPart[7:]
+			break
 		}
-
-		result = append(result, headPart)
 	}
 
-	headLine := strings.Join(result, " ") + "\n"
+	headLine := strings.Join(headSlice, " ") + "\n"
 
 	return fmt.Sprintf("0000%04x%s", 4+len(headLine), headLine)
 }
