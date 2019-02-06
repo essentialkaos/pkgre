@@ -219,6 +219,10 @@ func parseRefLine(data string) (RefType, string, string) {
 		name = name[0 : len(name)-3]
 	}
 
+	if len(name) < 11 {
+		return TYPE_UNKNOWN, "", ""
+	}
+
 	if name[:10] == "refs/tags/" {
 		return TYPE_TAG, name[10:], sha
 	} else if name[:11] == "refs/heads/" {
