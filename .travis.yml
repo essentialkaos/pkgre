@@ -34,4 +34,5 @@ before_install:
 
 script:
   - make all
+  - make test
   - ./perfecto-docker common/pkgre.spec
