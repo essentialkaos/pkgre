@@ -6,7 +6,7 @@
 ################################################################################
 
 .DEFAULT_GOAL := help
-.PHONY = fmt all clean deps metalinter help
+.PHONY = fmt all clean deps deps-test test metalinter help
 
 ################################################################################
 
@@ -32,6 +32,13 @@ deps: ## Download dependencies
 	go get -d -v github.com/valyala/fasthttp
 	go get -d -v pkg.re/essentialkaos/ek.v10
 	go get -d -v pkg.re/essentialkaos/librato.v8
+
+deps-test: ## Download dependencies for tests
+	git config --global http.https://pkg.re.followRedirects true
+	go get -d -v pkg.re/check.v1
+
+test: ## Run tests
+	go test -covermode=count ./refs
 
 fmt: ## Format source code with gofmt
 	find . -name "*.go" -exec gofmt -s -w {} \;

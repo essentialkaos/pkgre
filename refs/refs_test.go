@@ -103,6 +103,36 @@ func (s *RefsSuite) TestSHAFormat(c *C) {
 	c.Assert(formatSHA("", false), Equals, "")
 }
 
+func (s *RefsSuite) TestRefsParser(c *C) {
+	ref := "0040daa684d3e025e542e542472df3905fb26e41fc60 refs/heads/develop"
+	typ, name, sha := parseRefLine(ref)
+
+	c.Assert(typ, Equals, TYPE_BRANCH)
+	c.Assert(name, Equals, "develop")
+	c.Assert(sha, Equals, "daa684d3e025e542e542472df3905fb26e41fc60")
+
+	ref = "003e8c2a3a5610d8a5b93a3fc0540cc78976f74f43a4 refs/tags/v1.0.1^{}"
+	typ, name, sha = parseRefLine(ref)
+
+	c.Assert(typ, Equals, TYPE_TAG)
+	c.Assert(name, Equals, "v1.0.1")
+	c.Assert(sha, Equals, "8c2a3a5610d8a5b93a3fc0540cc78976f74f43a4")
+
+	ref = "003e8c2a3a5610d8a5b93a3fc0540cc78976f74f43a4 refs/tags"
+	typ, name, sha = parseRefLine(ref)
+
+	c.Assert(typ, Equals, TYPE_UNKNOWN)
+	c.Assert(name, Equals, "")
+	c.Assert(sha, Equals, "")
+
+	ref = "003e8c2a3a5610d8a5b93a3fc0540cc78976f74f43a4 00000000^{}"
+	typ, name, sha = parseRefLine(ref)
+
+	c.Assert(typ, Equals, TYPE_UNKNOWN)
+	c.Assert(name, Equals, "")
+	c.Assert(sha, Equals, "")
+}
+
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func (s *RefsSuite) BenchmarkParsing(c *C) {
