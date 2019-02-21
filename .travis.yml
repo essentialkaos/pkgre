@@ -1,10 +1,9 @@
-sudo: required
-
 language: go
 
 go:
   - 1.9.x
   - 1.10.x
+  - 1.11.x
   - tip
 
 os:
@@ -32,7 +31,9 @@ before_install:
   - wget https://kaos.sh/perfecto/perfecto-docker
   - chmod +x perfecto-docker
   - make deps
+  - make deps-test
 
 script:
   - make all
+  - make test
   - ./perfecto-docker common/pkgre.spec

@@ -18,17 +18,17 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v9/knf"
-	"pkg.re/essentialkaos/ek.v9/log"
-	"pkg.re/essentialkaos/ek.v9/sortutil"
-	"pkg.re/essentialkaos/ek.v9/version"
+	"pkg.re/essentialkaos/ek.v10/knf"
+	"pkg.re/essentialkaos/ek.v10/log"
+	"pkg.re/essentialkaos/ek.v10/sortutil"
+	"pkg.re/essentialkaos/ek.v10/version"
 
 	"github.com/orcaman/concurrent-map"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -39,7 +39,7 @@ const (
 	HTTP_REDIRECT = "http:redirect"
 )
 
-const USER_AGENT = "PkgRE-Morpher/3.6"
+const USER_AGENT = "PkgRE-Morpher"
 
 const MAX_GODOC_IP_STORE = 3600 // 1 hour
 
@@ -90,10 +90,15 @@ var proxyClient *fasthttp.Client
 // map with godoc ip's
 var godocIPStore cmap.ConcurrentMap
 
+// daemonVersion is current morpher version
+var daemonVersion string
+
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Start start HTTP server
-func Start() error {
+func Start(version string) error {
+	daemonVersion = version
+
 	initHTTPClients()
 	initGoDocIPStore()
 
@@ -106,7 +111,7 @@ func Start() error {
 
 func initHTTPClients() {
 	client = &fasthttp.Client{
-		Name:                USER_AGENT,
+		Name:                USER_AGENT + "/" + daemonVersion,
 		MaxIdleConnDuration: 5 * time.Second,
 		ReadTimeout:         3 * time.Second,
 		WriteTimeout:        3 * time.Second,
@@ -114,7 +119,7 @@ func initHTTPClients() {
 	}
 
 	proxyClient = &fasthttp.Client{
-		Name:                USER_AGENT,
+		Name:                USER_AGENT + "/" + daemonVersion,
 		MaxIdleConnDuration: 10 * time.Second,
 		ReadTimeout:         15 * time.Second,
 		WriteTimeout:        15 * time.Second,

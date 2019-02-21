@@ -3,7 +3,7 @@ package refs
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                     Copyright (c) 2009-2018 ESSENTIAL KAOS                         //
+//                     Copyright (c) 2009-2019 ESSENTIAL KAOS                         //
 //        Essential Kaos Open Source License <https://essentialkaos.com/ekol>         //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -22,8 +23,7 @@ type RefType uint8
 type Info struct {
 	branches map[string]string // branch -> rev
 	tags     map[string]string // tag -> rev
-	raw      []string
-	rawSize  int
+	raw      []byte
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -36,7 +36,7 @@ const (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// TagList return slice of tag names
+// TagList returns slice of tag names
 func (r *Info) TagList() []string {
 	if r == nil {
 		return []string{}
@@ -51,7 +51,7 @@ func (r *Info) TagList() []string {
 	return result
 }
 
-// BranchList return slice of branch names
+// BranchList returns slice of branch names
 func (r *Info) BranchList() []string {
 	if r == nil {
 		return []string{}
@@ -66,52 +66,58 @@ func (r *Info) BranchList() []string {
 	return result
 }
 
-// HasBranch return true if branch with given name is exist in repo
+// HasBranch returns true if branch with given name is exist in repo
 func (r *Info) HasBranch(name string) bool {
+	if r == nil || r.branches == nil {
+		return false
+	}
+
 	return r.branches[name] != ""
 }
 
-// HasBranch return true if tag with given name is exist in repo
+// HasBranch returns true if tag with given name is exist in repo
 func (r *Info) HasTag(name string) bool {
+	if r == nil || r.tags == nil {
+		return false
+	}
+
 	return r.tags[name] != ""
 }
 
-// GetTagSHA return SHA for given tag
+// GetTagSHA returns SHA for given tag
 func (r *Info) GetTagSHA(name string, short bool) string {
-	sha := r.tags[name]
-
-	if sha == "" {
+	if r == nil || r.tags == nil {
 		return ""
 	}
 
-	return formatSHA(sha, short)
+	return formatSHA(r.tags[name], short)
 }
 
-// GetBranchSHA return SHA for given branch
+// GetBranchSHA returns SHA for given branch
 func (r *Info) GetBranchSHA(name string, short bool) string {
-	sha := r.branches[name]
-
-	if sha == "" {
+	if r == nil || r.branches == nil {
 		return ""
 	}
 
-	return formatSHA(sha, short)
+	return formatSHA(r.branches[name], short)
 }
 
-// Rewrite return refs with updated head
+// Rewrite returns refs with updated head
 func (r *Info) Rewrite(headName string, headType RefType) []byte {
 	// If head name is empty we return unchanged refs
 	if headName == "" {
-		return []byte(strings.Join(r.raw, "\n"))
+		return r.raw
 	}
 
 	var (
-		buf     bytes.Buffer
+		rBuf    *bytes.Buffer
+		wBuf    bytes.Buffer
 		refName string
 		refSHA  string
 	)
 
-	buf.Grow(r.rawSize + 256)
+	rBuf = bytes.NewBuffer(r.raw)
+	wBuf.Grow(len(r.raw) + 256)
 
 	switch headType {
 	case TYPE_TAG:
@@ -122,64 +128,77 @@ func (r *Info) Rewrite(headName string, headType RefType) []byte {
 		refSHA = r.branches[headName]
 	}
 
-	lastLine := len(r.raw) - 1
+	var lines int
 
-	for index, line := range r.raw {
-		switch index {
-		case 1:
-			fmt.Fprintf(&buf, rewriteHeadRefs(line, refName, refSHA))
-		case lastLine:
-			fmt.Fprintf(&buf, line)
-		default:
-			if strings.HasSuffix(line, "refs/heads/master") {
-				refLine := refSHA + " " + "refs/heads/master\n"
-				fmt.Fprintf(&buf, "%04x%s", 4+len(refLine), refLine)
-			} else {
-				fmt.Fprintln(&buf, line)
-			}
+	for {
+		lines++
+
+		line, err := rBuf.ReadString('\n')
+
+		if err == io.EOF {
+			fmt.Fprintln(&wBuf, line)
+			break
+		}
+
+		line = line[:len(line)-1]
+
+		if lines == 2 {
+			fmt.Fprintf(&wBuf, rewriteHeadRefs(line, refName, refSHA))
+			continue
+		}
+
+		if strings.HasSuffix(line, "refs/heads/master") {
+			refLine := refSHA + " " + "refs/heads/master\n"
+			fmt.Fprintf(&wBuf, "%04x%s", 4+len(refLine), refLine)
+		} else {
+			fmt.Fprintln(&wBuf, line)
 		}
 	}
 
-	return buf.Bytes()
+	return wBuf.Bytes()
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // Parse parse data and return refs struct and error
 func Parse(data []byte) (*Info, error) {
-	strDataSlice := strings.Split(string(data[:]), "\n")
-
-	// Well formated refs data must contains 3 or more lines
-	if len(strDataSlice) <= 3 {
-		return nil, errors.New("Info data is malfomed")
-	}
-
 	refs := &Info{
 		branches: make(map[string]string),
 		tags:     make(map[string]string),
-		rawSize:  len(data),
-		raw:      strDataSlice,
+		raw:      data,
 	}
 
-	for lineNum, line := range strDataSlice {
-		switch lineNum {
-		case 0:
+	var lines int
+
+	buf := bytes.NewBuffer(data)
+
+	for {
+		lines++
+
+		if lines == 1 {
 			continue
 		}
 
-		// End of refs
-		if line == "0000" {
+		line, err := buf.ReadString('\n')
+
+		if err == io.EOF || line == "0000\n" {
 			break
 		}
 
-		t, name, sha := parseRefLine(line)
+		line = line[:len(line)-1]
 
-		switch t {
+		typ, name, sha := parseRefLine(line)
+
+		switch typ {
 		case TYPE_BRANCH:
 			refs.branches[name] = sha
 		case TYPE_TAG:
 			refs.tags[name] = sha
 		}
+	}
+
+	if lines <= 3 {
+		return nil, errors.New("Refs data is malfomed")
 	}
 
 	return refs, nil
@@ -189,44 +208,36 @@ func Parse(data []byte) (*Info, error) {
 
 // parseRefLine parse line with refs and return type, name and hash
 func parseRefLine(data string) (RefType, string, string) {
-	lineSlice := strings.Split(data, " ")
-
-	if len(lineSlice) < 2 {
+	if len(data) < 55 {
 		return TYPE_UNKNOWN, "", ""
 	}
 
-	name, sha := lineSlice[1], lineSlice[0]
+	sha := data[4:44]
+	name := data[45:]
 
 	if strings.HasSuffix(name, "^{}") {
 		name = name[0 : len(name)-3]
 	}
 
+	if len(name) < 11 {
+		return TYPE_UNKNOWN, "", ""
+	}
+
 	if name[:10] == "refs/tags/" {
-		return TYPE_TAG, name[10:], sha[4:]
+		return TYPE_TAG, name[10:], sha
 	} else if name[:11] == "refs/heads/" {
-		return TYPE_BRANCH, name[11:], sha[4:]
+		return TYPE_BRANCH, name[11:], sha
 	} else {
 		return TYPE_UNKNOWN, "", ""
 	}
 }
 
-// safeLineParse split line
-func safeLineParse(data string, index int) string {
-	if data == "" {
-		return ""
-	}
-
-	slice := strings.Split(data, " ")
-
-	if len(slice) < index {
-		return ""
-	}
-
-	return slice[index]
-}
-
 // formatSHA return formated (short/long) SHA hash
 func formatSHA(sha string, short bool) string {
+	if len(sha) < 8 {
+		return ""
+	}
+
 	switch short {
 	case true:
 		return sha[:8]
@@ -237,31 +248,26 @@ func formatSHA(sha string, short bool) string {
 
 // rewriteHeadRefs return head line with new head refs
 func rewriteHeadRefs(head, refName, refSHA string) string {
-	var result []string
-
 	headSlice := strings.Split(head, " ")
 
-	for index, headPart := range headSlice {
-		if index == 0 {
-			result = append(result, refSHA)
-			continue
+	for i, headPart := range headSlice {
+		if i == 0 {
+			headSlice[i] = refSHA
 		}
 
 		if strings.HasPrefix(headPart, "symref=") {
 			if strings.HasPrefix(refName, "refs/heads/") {
-				result = append(result, "symref=HEAD:"+refName)
+				headSlice[i] = "symref=HEAD:" + refName
 			} else {
-				result = append(result, headPart)
+				headSlice[i] = headPart
 			}
 
-			result = append(result, "oldref="+headPart[7:])
-			continue
+			headSlice[i] += " oldref=" + headPart[7:]
+			break
 		}
-
-		result = append(result, headPart)
 	}
 
-	headLine := strings.Join(result, " ") + "\n"
+	headLine := strings.Join(headSlice, " ") + "\n"
 
 	return fmt.Sprintf("0000%04x%s", 4+len(headLine), headLine)
 }

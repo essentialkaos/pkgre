@@ -1,4 +1,6 @@
-package main
+// +build gofuzz
+
+package refs
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
@@ -7,12 +9,12 @@ package main
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-import (
-	LIBRATO "github.com/essentialkaos/pkgre/librato"
-)
+func Fuzz(data []byte) int {
+	_, err := Parse(data)
 
-// ////////////////////////////////////////////////////////////////////////////////// //
+	if err != nil {
+		return 0
+	}
 
-func main() {
-	LIBRATO.Init()
+	return 1
 }
