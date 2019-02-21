@@ -93,6 +93,8 @@ func (s *RefsSuite) TestRewrite(c *C) {
 	newData = info.Rewrite("v3.6.0", TYPE_TAG)
 
 	c.Assert(bytes.Contains(newData, []byte("c766ee99f84d21dbd9cceb1ecbc5a6dae956efef HEAD")), Equals, true)
+
+	c.Assert(newData[len(newData)-4:], DeepEquals, []byte("0000"))
 }
 
 func (s *RefsSuite) TestSHAFormat(c *C) {

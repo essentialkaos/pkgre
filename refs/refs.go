@@ -136,11 +136,11 @@ func (r *Info) Rewrite(headName string, headType RefType) []byte {
 		line, err := rBuf.ReadString('\n')
 
 		if err == io.EOF {
-			fmt.Fprintln(&wBuf, line)
+			fmt.Fprintf(&wBuf, line)
 			break
 		}
 
-		line = line[:len(line)-1]
+		line = strings.TrimRight(line, "\n")
 
 		if lines == 2 {
 			fmt.Fprintf(&wBuf, rewriteHeadRefs(line, refName, refSHA))
