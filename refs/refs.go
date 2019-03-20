@@ -75,7 +75,7 @@ func (r *Info) HasBranch(name string) bool {
 	return r.branches[name] != ""
 }
 
-// HasBranch returns true if tag with given name is exist in repo
+// HasTag returns true if tag with given name is exist in repo
 func (r *Info) HasTag(name string) bool {
 	if r == nil || r.tags == nil {
 		return false
