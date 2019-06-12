@@ -15,6 +15,7 @@ import (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Info contains basic information about repository
 type Info struct {
 	User   string
 	Name   string
@@ -28,7 +29,7 @@ var pathValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_.-/]{0,}`)
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// Parse parses given path to repo struct
+// ParsePath parses given path to repo struct
 func ParsePath(path string) (*Info, error) {
 	if strings.Contains(path, ".git") {
 		path = strings.Replace(path, ".git", "", -1)

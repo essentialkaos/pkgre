@@ -1,4 +1,3 @@
-// Git refs parser
 package refs
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -18,8 +17,10 @@ import (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// RefType is type for refs
 type RefType uint8
 
+// Info contains all refs info
 type Info struct {
 	branches map[string]string // branch -> rev
 	tags     map[string]string // tag -> rev
@@ -28,6 +29,7 @@ type Info struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Types info
 const (
 	TYPE_UNKNOWN RefType = iota
 	TYPE_BRANCH
@@ -75,7 +77,7 @@ func (r *Info) HasBranch(name string) bool {
 	return r.branches[name] != ""
 }
 
-// HasBranch returns true if tag with given name is exist in repo
+// HasTag returns true if tag with given name is exist in repo
 func (r *Info) HasTag(name string) bool {
 	if r == nil || r.tags == nil {
 		return false
