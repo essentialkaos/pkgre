@@ -74,7 +74,7 @@
   revision = "788fd78401277ebd861206a03c884797c6ec5541"
 
 [[projects]]
-  digest = "1:13e820658b5aa885e48e4fa166cf0202e8e232928bbc1a190b1f72a119bef27d"
+  digest = "1:b18ad16e653a675bd7ae391423cd7b96cfed9cca8519973aed698bc76333fbf6"
   name = "pkg.re/essentialkaos/ek.v10"
   packages = [
     "env",
@@ -96,8 +96,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "8b2e8e5ebba8fe9e5d0f96c2bba3850697e82c84"
-  version = "v10.11.0"
+  revision = "5e3d630da17c6a7e9e56d23b66a023efeba30446"
+  version = "v10.11.1"
 
 [[projects]]
   digest = "1:b02a115e97dd7671eb765b292b291eb5de623209b50e03370bf620d327f72ead"
