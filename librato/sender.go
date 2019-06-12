@@ -21,10 +21,12 @@ import (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Supported command-line options
 const (
 	OPT_CONFIG = "c:config"
 )
 
+// Configuration file properties names
 const (
 	MAIN_ENABLED   = "main:enabled"
 	METRICS_URL    = "metrics:url"
@@ -35,6 +37,7 @@ const (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Metrics contains metrics data
 type Metrics struct {
 	Hits      uint64 `json:"hits"`
 	Misses    uint64 `json:"misses"`
@@ -52,6 +55,7 @@ var optMap = options.Map{
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Init main function
 func Init() {
 	_, errs := options.Parse(optMap)
 

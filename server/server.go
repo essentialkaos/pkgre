@@ -26,12 +26,14 @@ import (
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Application info
 const (
 	APP  = "PkgRE Morpher Server"
 	VER  = "3.7.1"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
+// Supported command-line options
 const (
 	OPT_CONFIG   = "c:config"
 	OPT_NO_COLOR = "nc:no-color"
@@ -39,6 +41,7 @@ const (
 	OPT_VER      = "v:version"
 )
 
+// Limits
 const (
 	MIN_PROCS = 1
 	MAX_PROCS = 32
@@ -46,6 +49,7 @@ const (
 	MAX_PORT  = 65535
 )
 
+// Configuration file properties names
 const (
 	MAIN_PROCS    = "main:procs"
 	HTTP_IP       = "http:ip"
@@ -68,6 +72,7 @@ var optMap = options.Map{
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// Init is main func
 func Init() {
 	_, errs := options.Parse(optMap)
 
