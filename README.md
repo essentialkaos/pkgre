@@ -1,4 +1,15 @@
-# `pkg.re` [![Build Status](https://travis-ci.org/essentialkaos/pkgre.svg?branch=master)](https://travis-ci.org/essentialkaos/pkgre) [![Go Report Card](https://goreportcard.com/badge/github.com/essentialkaos/pkgre)](https://goreportcard.com/report/github.com/essentialkaos/pkgre) [![codebeat badge](https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9)](https://codebeat.co/projects/github-com-essentialkaos-pkgre-master) [![License](https://gh.kaos.st/ekol.svg)](https://essentialkaos.com/ekol)
+<p align="center"><img src="https://gh.kaos.st/pkgre.svg"/></p>
+
+<p align="center">
+  <a href="https://travis-ci.org/essentialkaos/pkgre"><img src="https://travis-ci.org/essentialkaos/pkgre.svg?branch=master" /></a> 
+  <a href="https://goreportcard.com/report/github.com/essentialkaos/pkgre"><img src="https://goreportcard.com/badge/github.com/essentialkaos/pkgre" /></a>
+  <a href="https://codebeat.co/projects/github-com-essentialkaos-pkgre-master"><img alt="codebeat badge" src="https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9" /></a> 
+  <a href="https://essentialkaos.com/ekol"><img src="https://gh.kaos.st/ekol.svg" /></a>
+</p>
+
+<p align="center"><a href="#git-support">Git support</a> • <a href="#routing-examples">Routing examples</a> • <a href="#contributing">Contributing</a> • <a href="#license">License</a></p>
+
+<br/>
 
 The [pkg.re](https://pkg.re) service provides versioned URLs that offer the proper metadata for redirecting the go tool onto well defined GitHub repositories. Developers that choose to use this service are strongly encouraged to not make any backwards incompatible changes without also changing the version in the package URL. This convention improves the chances that dependent code will continue to work while depended upon packages evolve.
 
