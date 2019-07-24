@@ -1,4 +1,0 @@
-SHELL=/bin/bash
-HOME=/srv/projects/pkgre
-
-* * * * * morpher /usr/bin/morpher-librato &> /dev/null || :

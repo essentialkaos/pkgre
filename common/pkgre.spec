@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            3.7.1
+Version:            3.7.2
 Release:            0%{?dist}
 Group:              Applications/System
 License:            EKOL
@@ -64,7 +64,7 @@ Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:      golang >= 1.11
+BuildRequires:      golang >= 1.12
 
 %if 0%{?rhel} >= 7
 Requires:           systemd
@@ -94,18 +94,6 @@ pkg.re service morpher server.
 
 ################################################################################
 
-%package librato
-
-Summary:            Tool for sending morpher metrics to Librato
-Group:              Applications/System
-
-Requires:           pkgre = %{version}
-
-%description librato
-Tool for sending morpher metrics to Librato.
-
-################################################################################
-
 %prep
 %setup -q
 
@@ -129,17 +117,8 @@ install -dm 755 %{buildroot}%{_logdir}/%{name}/morpher
 install -pm 755 %{src_dir}/morpher-server \
                 %{buildroot}%{_bindir}/
 
-install -pm 755 %{src_dir}/morpher-librato \
-                %{buildroot}%{_bindir}/
-
 install -pm 644 %{src_dir}/common/morpher.knf \
                 %{buildroot}%{_sysconfdir}/
-
-install -pm 644 %{src_dir}/common/morpher-librato.knf \
-                %{buildroot}%{_sysconfdir}/
-
-install -pm 644 %{src_dir}/common/morpher-librato.cron \
-                %{buildroot}%{_sysconfdir}/cron.d/morpher-librato
 
 %if 0%{?rhel} >= 7
 install -dm 755 %{buildroot}%{_unitdir}
@@ -198,16 +177,12 @@ rm -rf %{buildroot}
 %{_unitdir}/morpher.service
 %endif
 
-%files librato
-%defattr(-,root,root,-)
-%doc LICENSE.EN LICENSE.RU
-%config(noreplace) %{_sysconfdir}/morpher-librato.knf
-%config(noreplace) %{_sysconfdir}/cron.d/morpher-librato
-%{_bindir}/morpher-librato
-
 ################################################################################
 
 %changelog
+* Mon Jul 22 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.2-0
+- Removed Librato support
+
 * Thu Feb 21 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.1-0
 - Fixed major bug with refs rewriting
 
