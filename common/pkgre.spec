@@ -180,7 +180,7 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
-* Mon Jul 22 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.1-1
+* Mon Jul 22 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.2-0
 - Removed Librato support
 
 * Thu Feb 21 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.1-0
