@@ -18,10 +18,10 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v10/knf"
-	"pkg.re/essentialkaos/ek.v10/log"
-	"pkg.re/essentialkaos/ek.v10/sortutil"
-	"pkg.re/essentialkaos/ek.v10/version"
+	"pkg.re/essentialkaos/ek.v11/knf"
+	"pkg.re/essentialkaos/ek.v11/log"
+	"pkg.re/essentialkaos/ek.v11/sortutil"
+	"pkg.re/essentialkaos/ek.v11/version"
 
 	"github.com/orcaman/concurrent-map"
 
