@@ -3,20 +3,16 @@
   name = "github.com/orcaman/concurrent-map"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/valyala/fasthttp"
+  branch = "master"
 
 [[constraint]]
   branch = "master"
   name = "pkg.re/check.v1"
 
 [[constraint]]
-  name = "pkg.re/essentialkaos/ek.v10"
-  version = "10.11.0"
-
-[[constraint]]
-  name = "pkg.re/essentialkaos/librato.v8"
-  version = "8.0.0"
+  name = "pkg.re/essentialkaos/ek.v11"
+  version = "11.3.1"
 
 [prune]
   go-tests = true

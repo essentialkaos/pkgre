@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            3.7.2
+Version:            3.7.3
 Release:            0%{?dist}
 Group:              Applications/System
 License:            EKOL
@@ -180,6 +180,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Thu Dec 05 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.3-0
+- ek updated to v11
+
 * Mon Jul 22 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.2-0
 - Removed Librato support
 

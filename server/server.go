@@ -13,13 +13,15 @@ import (
 	"runtime"
 	"strings"
 
-	"pkg.re/essentialkaos/ek.v10/fmtc"
-	"pkg.re/essentialkaos/ek.v10/fsutil"
-	"pkg.re/essentialkaos/ek.v10/knf"
-	"pkg.re/essentialkaos/ek.v10/log"
-	"pkg.re/essentialkaos/ek.v10/options"
-	"pkg.re/essentialkaos/ek.v10/signal"
-	"pkg.re/essentialkaos/ek.v10/usage"
+	"pkg.re/essentialkaos/ek.v11/fmtc"
+	"pkg.re/essentialkaos/ek.v11/knf"
+	"pkg.re/essentialkaos/ek.v11/log"
+	"pkg.re/essentialkaos/ek.v11/options"
+	"pkg.re/essentialkaos/ek.v11/signal"
+	"pkg.re/essentialkaos/ek.v11/usage"
+
+	knfv "pkg.re/essentialkaos/ek.v11/knf/validators"
+	knff "pkg.re/essentialkaos/ek.v11/knf/validators/fs"
 
 	"github.com/essentialkaos/pkgre/server/morpher"
 )
@@ -29,7 +31,7 @@ import (
 // Application info
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "3.7.2"
+	VER  = "3.7.3"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -130,26 +132,13 @@ func prepare() {
 
 // validateConfig validate config values
 func validateConfig() {
-	var permsChecker = func(config *knf.Config, prop string, value interface{}) error {
-		if !fsutil.CheckPerms(value.(string), config.GetS(prop)) {
-			switch value.(string) {
-			case "DWX":
-				return fmt.Errorf("Property %s must be path to writable directory", prop)
-			}
-		}
-
-		return nil
-	}
-
-	validators := []*knf.Validator{
-		{MAIN_PROCS, knf.Less, MIN_PROCS},
-		{MAIN_PROCS, knf.Greater, MAX_PROCS},
-		{HTTP_PORT, knf.Less, MIN_PORT},
-		{HTTP_PORT, knf.Greater, MAX_PORT},
-		{LOG_DIR, permsChecker, "DWX"},
-	}
-
-	errs := knf.Validate(validators)
+	errs := knf.Validate([]*knf.Validator{
+		{MAIN_PROCS, knfv.Less, MIN_PROCS},
+		{MAIN_PROCS, knfv.Greater, MAX_PROCS},
+		{HTTP_PORT, knfv.Less, MIN_PORT},
+		{HTTP_PORT, knfv.Greater, MAX_PORT},
+		{LOG_DIR, knff.Perms, "DWX"},
+	})
 
 	if len(errs) != 0 {
 		printError("Error while config validation:")
@@ -232,7 +221,7 @@ func hupSignalHandler() {
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func showUsage() {
-	info := usage.NewInfo("")
+	info := usage.NewInfo()
 
 	info.AddOption(OPT_CONFIG, "Path to config file", "file")
 	info.AddOption(OPT_NO_COLOR, "Disable colors in output")
