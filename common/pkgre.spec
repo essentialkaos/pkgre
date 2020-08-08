@@ -57,7 +57,7 @@ Name:               pkgre
 Version:            3.7.3
 Release:            0%{?dist}
 Group:              Applications/System
-License:            EKOL
+License:            Apache License, Version 2.0
 URL:                https://github.com/essentialkaos/pkgre
 
 Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
@@ -166,7 +166,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE.EN LICENSE.RU
+%doc LICENSE
 %attr(-,%{morpher_user},%{morpher_group}) %dir %{_logdir}/%{name}/morpher/
 %config(noreplace) %{_sysconfdir}/morpher.knf
 %config(noreplace) %{_sysconfdir}/logrotate.d/morpher
