@@ -151,6 +151,7 @@ rm -rf %{buildroot}
 * Thu Nov 12 2020 Anton Novojilov <andy@essentialkaos.com> - 4.0.0-0
 - Proxying all requests due to problems with Go Modules Services
 - ek package updated to v12
+- fasthttp package updated to 1.17.0
 - Code refactoring
 
 * Thu Dec 05 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.3-0

@@ -2,7 +2,15 @@
 
 
 [[projects]]
-  digest = "1:1a27a67993fd9ad63a5e04b49a9cacd32e4d3efdf44223749410c1e02bb53011"
+  digest = "1:3bfdfb3f1e89263734e9dd6d65a00ad0d4886750061439b7da2a8ab753a2ecf4"
+  name = "github.com/andybalholm/brotli"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "729edfbcfeaad43a6412c185205501ec80773250"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:8d029fb6638c2f922b8b5a33aef0f07a44542a97a0cf89bf871dd837f6b3252d"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
@@ -10,32 +18,24 @@
     "zlib",
   ]
   pruneopts = "UT"
-  revision = "438db640fd672278e44bb9bec0b979358e7e9c76"
-  version = "v1.9.4"
+  revision = "456984a7ed625447418279c10e2a8b6e357aa267"
+  version = "v1.11.2"
 
 [[projects]]
-  digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
-  name = "github.com/kr/pretty"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
-  version = "v0.1.0"
-
-[[projects]]
-  digest = "1:15b5cc79aad436d47019f814fde81a10221c740dc8ddf769221a65097fb6c2e9"
+  digest = "1:7218fd69ff5436d016101bbc6183cdc289aa45ac37b48e78846318e4ef389bea"
   name = "github.com/kr/text"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
-  version = "v0.1.0"
+  revision = "702c74938df48b97370179f33ce2107bd7ff3b3e"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:618162a6fd7ef94485d136d1bdd062c49eed478144967eb050c9e3dbe9e4f26b"
-  name = "github.com/orcaman/concurrent-map"
+  digest = "1:4454a22e87e1aacfb4c7e9550ab98c711a5285a0cc7f9ff8952c44a9b0dbbb05"
+  name = "github.com/niemeyer/pretty"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8c72a8bb44f6cfcff2abae8ebcbaaaf883331363"
+  revision = "a10e7caefd8e0d600cea437f5c3613aeb1553d56"
 
 [[projects]]
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
@@ -46,8 +46,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:ce5a1626228ba90c9780d2f1e0a4ab7cb04a1b7ffb7a41c000e7f8ea7a9f03f4"
+  digest = "1:a8580c4e2a628114325d82f8bc6557b888ae93ac453a849ddbc9c1787de09246"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -55,19 +54,20 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "a266a926ae7cf645c53b201a499d8a69e4566aaf"
+  revision = "74bd13a169aebf95983bd28a22d69ff5969665cc"
+  version = "v1.17.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:bc88591477b5fee4520dcd3d8fa8fd26f5d78b83193ed0102a7e83552652daa4"
+  digest = "1:bcc487fe614a1d561dfc3fd179328f5e9777ceaea29cdb25b775309e9b85858d"
   name = "pkg.re/check.v1"
   packages = ["."]
   pruneopts = "UT"
-  revision = "41f04d3bba152ddec2103e299fed053415705330"
+  revision = "038fdea0a05bc030b0bfda479dc2e08d2220ec74"
 
 [[projects]]
-  digest = "1:2496fe11a6191320b769f5b79e331ad28247929cc231bdc115a47bb789d147ef"
-  name = "pkg.re/essentialkaos/ek.v11"
+  digest = "1:904f7cbc12855430f0d164541cdd3ade6026373835fcdf6d3ce320a30789bab4"
+  name = "pkg.re/essentialkaos/ek.v12"
   packages = [
     "env",
     "fmtc",
@@ -87,26 +87,25 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "20c9dc5c9c3aa53d77b260e1d565e7bcdc2924b1"
-  version = "v11.3.1"
+  revision = "f5be0b2efabbb624246ed395ede96a96dbd9c563"
+  version = "v12.10.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/orcaman/concurrent-map",
     "github.com/valyala/fasthttp",
     "pkg.re/check.v1",
-    "pkg.re/essentialkaos/ek.v11/fmtc",
-    "pkg.re/essentialkaos/ek.v11/knf",
-    "pkg.re/essentialkaos/ek.v11/knf/validators",
-    "pkg.re/essentialkaos/ek.v11/knf/validators/fs",
-    "pkg.re/essentialkaos/ek.v11/log",
-    "pkg.re/essentialkaos/ek.v11/options",
-    "pkg.re/essentialkaos/ek.v11/signal",
-    "pkg.re/essentialkaos/ek.v11/sortutil",
-    "pkg.re/essentialkaos/ek.v11/usage",
-    "pkg.re/essentialkaos/ek.v11/version",
+    "pkg.re/essentialkaos/ek.v12/fmtc",
+    "pkg.re/essentialkaos/ek.v12/knf",
+    "pkg.re/essentialkaos/ek.v12/knf/validators",
+    "pkg.re/essentialkaos/ek.v12/knf/validators/fs",
+    "pkg.re/essentialkaos/ek.v12/log",
+    "pkg.re/essentialkaos/ek.v12/options",
+    "pkg.re/essentialkaos/ek.v12/signal",
+    "pkg.re/essentialkaos/ek.v12/sortutil",
+    "pkg.re/essentialkaos/ek.v12/usage",
+    "pkg.re/essentialkaos/ek.v12/version",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
