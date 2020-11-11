@@ -18,12 +18,10 @@ import (
 	"text/template"
 	"time"
 
-	"pkg.re/essentialkaos/ek.v11/knf"
-	"pkg.re/essentialkaos/ek.v11/log"
-	"pkg.re/essentialkaos/ek.v11/sortutil"
-	"pkg.re/essentialkaos/ek.v11/version"
-
-	"github.com/orcaman/concurrent-map"
+	"pkg.re/essentialkaos/ek.v12/knf"
+	"pkg.re/essentialkaos/ek.v12/log"
+	"pkg.re/essentialkaos/ek.v12/sortutil"
+	"pkg.re/essentialkaos/ek.v12/version"
 
 	"github.com/essentialkaos/pkgre/refs"
 	"github.com/essentialkaos/pkgre/repo"
@@ -41,8 +39,6 @@ const (
 
 const USER_AGENT = "PkgRE-Morpher"
 
-const MAX_GODOC_IP_STORE = 3600 // 1 hour
-
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // PkgInfo is struct with package info
@@ -52,6 +48,16 @@ type PkgInfo struct {
 	Path       string
 	TargetType refs.RefType
 	TargetName string
+}
+
+// Metrics is struct with metrics data
+type Metrics struct {
+	Hits      uint64
+	Misses    uint64
+	Errors    uint64
+	Redirects uint64
+	Docs      uint64
+	Goget     uint64
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -74,24 +80,14 @@ var goGetTemplate = template.Must(template.New("").Parse(`<html>
 // client is default client for all http requests
 var client *fasthttp.Client
 
-// metrics
-var (
-	counterHits      uint64
-	counterMisses    uint64
-	counterErrors    uint64
-	counterRedirects uint64
-	counterDocs      uint64
-	counterGoget     uint64
-)
-
 // client for proxying requests to GitHub.com
 var proxyClient *fasthttp.Client
 
-// map with godoc ip's
-var godocIPStore cmap.ConcurrentMap
-
 // daemonVersion is current morpher version
 var daemonVersion string
+
+// metrics contains morpher metrics
+var metrics = &Metrics{}
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -100,7 +96,6 @@ func Start(version string) error {
 	daemonVersion = version
 
 	initHTTPClients()
-	initGoDocIPStore()
 
 	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
 
@@ -124,34 +119,6 @@ func initHTTPClients() {
 		ReadTimeout:         15 * time.Second,
 		WriteTimeout:        15 * time.Second,
 		MaxConnsPerHost:     50,
-	}
-}
-
-func initGoDocIPStore() {
-	godocIPStore = cmap.New()
-
-	go startGoDocStoreJanitor()
-}
-
-func startGoDocStoreJanitor() {
-	for {
-		time.Sleep(time.Hour)
-
-		now := time.Now().Unix()
-		ips := godocIPStore.Keys()
-
-		for _, ip := range ips {
-			lastSeen, ok := godocIPStore.Get(ip)
-
-			if !ok {
-				continue
-			}
-
-			// Remove records older than 1 hour
-			if now-lastSeen.(int64) >= MAX_GODOC_IP_STORE {
-				godocIPStore.Remove(ip)
-			}
-		}
 	}
 }
 
@@ -182,7 +149,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	repoInfo, err := repo.ParsePath(path)
 
 	if err != nil {
-		atomic.AddUint64(&counterErrors, 1)
+		atomic.AddUint64(&metrics.Errors, 1)
 		log.Warn("Can't parse repo path: %v", err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
@@ -198,7 +165,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	refsInfo, err := fetchRefs(repoInfo)
 
 	if err != nil {
-		atomic.AddUint64(&counterErrors, 1)
+		atomic.AddUint64(&metrics.Errors, 1)
 		log.Warn("Can't process refs data for %s: %v", repoInfo.GitHubRoot(), err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
@@ -216,32 +183,19 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Return info for "go get" request
 	if len(ctx.FormValue("go-get")) != 0 {
-		// Request came from GoDoc, save IP
-		if strings.HasPrefix(string(ctx.UserAgent()), "GoDocBot") {
-			ip := getRealIP(ctx)
-			godocIPStore.Set(ip, time.Now().Unix())
-			log.Debug("Got request from GoDoc (IP: %s)", ip)
-		}
-
 		processGoGetRequest(ctx, start, pkgInfo)
 		return
 	}
 
-	atomic.AddUint64(&counterRedirects, 1)
+	atomic.AddUint64(&metrics.Redirects, 1)
 
 	// Redirect to github
 	appendProcHeader(ctx, start)
 
 	url := repoInfo.GitHubURL(pkgInfo.TargetName)
 
-	// Request came from GoDoc IP
-	if godocIPStore.Has(getRealIP(ctx)) {
-		log.Debug("Proxying request to %s", url)
-		proxyRequest(ctx, url)
-	} else {
-		log.Debug("Redirecting request to %s", url)
-		redirectRequest(ctx, url)
-	}
+	log.Debug("Proxying request to %s", url)
+	proxyRequest(ctx, url)
 }
 
 // processBasicRequest redirect requests from main page to page defined in config
@@ -254,21 +208,21 @@ func processBasicRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	appendProcHeader(ctx, start)
 
-	metrics := "{\n"
-	metrics += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&counterHits), 10) + ",\n"
-	metrics += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&counterMisses), 10) + ",\n"
-	metrics += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&counterErrors), 10) + ",\n"
-	metrics += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&counterRedirects), 10) + ",\n"
-	metrics += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&counterDocs), 10) + ",\n"
-	metrics += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&counterGoget), 10) + "\n"
-	metrics += "}\n"
+	data := "{\n"
+	data += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Hits), 10) + ",\n"
+	data += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Misses), 10) + ",\n"
+	data += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Errors), 10) + ",\n"
+	data += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Redirects), 10) + ",\n"
+	data += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Docs), 10) + ",\n"
+	data += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Goget), 10) + "\n"
+	data += "}\n"
 
-	ctx.WriteString(metrics)
+	ctx.WriteString(data)
 }
 
 // processDocsRequest redirect request to godoc.org
 func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string) {
-	atomic.AddUint64(&counterDocs, 1)
+	atomic.AddUint64(&metrics.Docs, 1)
 	appendProcHeader(ctx, start)
 	redirectRequest(ctx, "https://godoc.org/pkg.re"+path)
 }
@@ -279,14 +233,8 @@ func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInf
 
 	url := "https://" + repoInfo.GitHubRoot() + "/git-upload-pack"
 
-	// Request came from GoDoc IP
-	if godocIPStore.Has(getRealIP(ctx)) {
-		log.Debug("Proxying GoDoc git-upload-pack request to %s", url)
-		proxyRequest(ctx, url)
-	} else {
-		log.Debug("Redirecting git-upload-pack request to %s", url)
-		redirectRequest(ctx, url)
-	}
+	log.Debug("Redirecting git-upload-pack request to %s", url)
+	redirectRequest(ctx, url)
 }
 
 // processRefsRequest process request for refs
@@ -294,23 +242,23 @@ func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgI
 	if pkgInfo.TargetName != "" {
 		switch pkgInfo.TargetType {
 		case refs.TYPE_TAG:
-			atomic.AddUint64(&counterHits, 1)
+			atomic.AddUint64(&metrics.Hits, 1)
 			log.Debug(
 				"%s -> T:%s (%s)", pkgInfo.Path, pkgInfo.TargetName,
 				pkgInfo.RefsInfo.GetTagSHA(pkgInfo.TargetName, true),
 			)
 		case refs.TYPE_BRANCH:
-			atomic.AddUint64(&counterHits, 1)
+			atomic.AddUint64(&metrics.Hits, 1)
 			log.Debug(
 				"%s -> B:%s (%s)", pkgInfo.Path, pkgInfo.TargetName,
 				pkgInfo.RefsInfo.GetBranchSHA(pkgInfo.TargetName, true),
 			)
 		default:
-			atomic.AddUint64(&counterMisses, 1)
+			atomic.AddUint64(&metrics.Misses, 1)
 			log.Warn("%s -> master (proper tag/branch not found)", pkgInfo.Path)
 		}
 	} else {
-		atomic.AddUint64(&counterMisses, 1)
+		atomic.AddUint64(&metrics.Misses, 1)
 		log.Info("%s -> master (no target version)", pkgInfo.Path)
 	}
 
@@ -324,7 +272,7 @@ func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *Pkg
 	appendProcHeader(ctx, start)
 
 	if pkgInfo.TargetType == refs.TYPE_UNKNOWN {
-		atomic.AddUint64(&counterMisses, 1)
+		atomic.AddUint64(&metrics.Misses, 1)
 		ctx.Response.Header.Add("Content-Type", "text/plain; charset=utf-8")
 		ctx.SetStatusCode(http.StatusNotFound)
 		ctx.WriteString(fmt.Sprintf(
@@ -339,11 +287,11 @@ func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *Pkg
 	err := goGetTemplate.Execute(ctx, pkgInfo)
 
 	if err != nil {
-		atomic.AddUint64(&counterErrors, 1)
+		atomic.AddUint64(&metrics.Errors, 1)
 		log.Error("Can't render go get template: %v", err)
 	}
 
-	atomic.AddUint64(&counterGoget, 1)
+	atomic.AddUint64(&metrics.Goget, 1)
 }
 
 // notFoundResponse write 404 response

@@ -54,36 +54,24 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            3.7.3
+Version:            4.0.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            Apache License, Version 2.0
-URL:                https://github.com/essentialkaos/pkgre
+URL:                https://kaos.sh/pkgre
 
 Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:      golang >= 1.12
+BuildRequires:      golang >= 1.14
 
-%if 0%{?rhel} >= 7
 Requires:           systemd
-%else
-Requires:           kaosv >= 2.15
-%endif
 
-%if 0%{?rhel} >= 7
 Requires(pre):      shadow-utils
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
-%else
-Requires(pre):      shadow-utils
-Requires(post):     chkconfig
-Requires(preun):    chkconfig
-Requires(preun):    initscripts
-Requires(postun):   initscripts
-%endif
 
 Provides:           %{name} = %{version}-%{release}
 
@@ -120,15 +108,9 @@ install -pm 755 %{src_dir}/morpher-server \
 install -pm 644 %{src_dir}/common/morpher.knf \
                 %{buildroot}%{_sysconfdir}/
 
-%if 0%{?rhel} >= 7
 install -dm 755 %{buildroot}%{_unitdir}
 install -pm 644 %{src_dir}/common/morpher.service \
                 %{buildroot}%{_unitdir}/
-%else
-install -dm 755 %{buildroot}%{_initddir}
-install -pm 755 %{src_dir}/common/morpher.init \
-                %{buildroot}%{_initddir}/morpher
-%endif
 
 install -pm 755 %{src_dir}/common/morpher.logrotate \
                 %{buildroot}%{_sysconfdir}/logrotate.d/morpher
@@ -140,23 +122,13 @@ exit 0
 
 %post
 if [[ $1 -eq 1 ]] ; then
-%if 0%{?rhel} >= 7
   %{__sysctl} enable morpher.service &>/dev/null || :
-%else
-  %{__chkconfig} --add morpher &>/dev/null || :
-  %{__chkconfig} morpher on &>/dev/null || :
-%endif
 fi
 
 %preun
 if [[ $1 -eq 0 ]] ; then
-%if 0%{?rhel} >= 7
   %{__sysctl} --no-reload disable morpher.service &>/dev/null || :
   %{__sysctl} stop morpher.service &>/dev/null || :
-%else
-  %{__service} morpher stop &> /dev/null || :
-  %{__chkconfig} --del morpher &> /dev/null || :
-%endif
 fi
 
 %clean
@@ -171,15 +143,16 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/morpher.knf
 %config(noreplace) %{_sysconfdir}/logrotate.d/morpher
 %{_bindir}/morpher-server
-%if 0%{?rhel} <= 6
-%{_initrddir}/morpher
-%else
 %{_unitdir}/morpher.service
-%endif
 
 ################################################################################
 
 %changelog
+* Thu Nov 12 2020 Anton Novojilov <andy@essentialkaos.com> - 4.0.0-0
+- Proxying all requests due to problems with Go Modules Services
+- ek package updated to v12
+- Code refactoring
+
 * Thu Dec 05 2019 Anton Novojilov <andy@essentialkaos.com> - 3.7.3-0
 - ek updated to v11
 

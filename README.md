@@ -8,7 +8,7 @@
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
 
-<p align="center"><a href="#git-support">Git support</a> • <a href="#routing-examples">Routing examples</a> • <a href="#contributing">Contributing</a> • <a href="#license">License</a></p>
+<p align="center"><a href="#routing-examples">Routing examples</a> • <a href="#contributing">Contributing</a> • <a href="#license">License</a></p>
 
 <br/>
 
@@ -18,22 +18,10 @@ The [pkg.re](https://pkg.re) service provides versioned URLs that offer the prop
 The advantage of using pkg.re is that the URL is cleaner, shorter, redirects to the package documentation at godoc.org when opened with a browser, handles git branches and tags for versioning, and most importantly encourages the adoption of stable versioned package APIs.
 
 
-Note that pkg.re does not hold the package code. Instead, the go tool is redirected and obtains the code straight from the respective GitHub repository.
+Note that pkg.re does not hold the package code.
 
 
 [pkg.re](https://pkg.re) have backward compatibility with [gopkg.in](https://gopkg.in) service.
-
-### Git support
-
-Since version 2.11.1 git [does not follow](https://github.com/git/git/commit/50d3413740d1da599cdc0106e6e916741394cc98) redirects by default. If you use git 2.11.0+ you must allow redirects for pkg.re using next command:
-
-```bash
-git config --global http.https://pkg.re.followRedirects true
-```
-
-_You can set this property for earlier versions as well._
-
-For support fetching sources without this git configuration, we must proxy all content from source repository through our servers. This is **ABSOLUTELY NOT SECURE** and theoretically, allow to us modify the source code (_currently we just redirect all requests to Github, execept request's from GoDoc service_).
 
 ### Routing examples
 
