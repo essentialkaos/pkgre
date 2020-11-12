@@ -131,6 +131,11 @@ if [[ $1 -eq 0 ]] ; then
   %{__sysctl} stop morpher.service &>/dev/null || :
 fi
 
+%postun
+if [[ $1 -ge 1 ]] ; then
+  %{__sysctl} daemon-reload &>/dev/null || :
+fi
+
 %clean
 rm -rf %{buildroot}
 
