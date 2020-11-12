@@ -233,8 +233,8 @@ func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInf
 
 	url := "https://" + repoInfo.GitHubRoot() + "/git-upload-pack"
 
-	log.Debug("Redirecting git-upload-pack request to %s", url)
-	redirectRequest(ctx, url)
+	log.Debug("Proxying git-upload-pack request to %s", url)
+	proxyRequest(ctx, url)
 }
 
 // processRefsRequest process request for refs
