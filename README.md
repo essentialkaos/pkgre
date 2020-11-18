@@ -1,7 +1,7 @@
 <p align="center"><img src="https://gh.kaos.st/pkgre.svg"/></p>
 
 <p align="center">
-  <a href="https://travis-ci.com/essentialkaos/pkgre"><img src="https://travis-ci.com/essentialkaos/pkgre.svg?branch=master" /></a>
+  <a href="https://github.com/essentialkaos/pkgre/actions"><img src="https://github.com/essentialkaos/pkgre/workflows/CI/badge.svg" alt="GitHub Actions Status" /></a>
   <a href="https://github.com/essentialkaos/pkgre/actions?query=workflow%3ACodeQL"><img src="https://github.com/essentialkaos/pkgre/workflows/CodeQL/badge.svg" /></a>
   <a href="https://goreportcard.com/report/github.com/essentialkaos/pkgre"><img src="https://goreportcard.com/badge/github.com/essentialkaos/pkgre" /></a>
   <a href="https://codebeat.co/projects/github-com-essentialkaos-pkgre-master"><img alt="codebeat badge" src="https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9" /></a>
