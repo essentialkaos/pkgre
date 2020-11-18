@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests
         working-directory: ${{env.SRC_DIR}}
-        run: make tests
+        run: make test
 
   Perfecto:
     name: Perfecto
