@@ -8,6 +8,7 @@ package morpher
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -59,6 +60,13 @@ type Metrics struct {
 	Docs      uint64
 	Goget     uint64
 }
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
+var (
+	UAGit = []byte("git/")            // Git User-Agent
+	UAGo  = []byte("Go-http-client/") // Go User-Agent
+)
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -187,15 +195,19 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	atomic.AddUint64(&metrics.Redirects, 1)
-
-	// Redirect to github
 	appendProcHeader(ctx, start)
 
 	url := repoInfo.GitHubURL(pkgInfo.TargetName)
 
-	log.Debug("Proxying request to %s", url)
-	proxyRequest(ctx, url)
+	// Proxy only requests from Go and Git
+	if bytes.HasPrefix(ctx.UserAgent(), UAGit) || bytes.HasPrefix(ctx.UserAgent(), UAGo) {
+		log.Debug("Proxying request to %s", url)
+		proxyRequest(ctx, url)
+	} else {
+		atomic.AddUint64(&metrics.Redirects, 1)
+		log.Debug("Redirecting request to %s", url)
+		redirectRequest(ctx, url)
+	}
 }
 
 // processBasicRequest redirect requests from main page to page defined in config
