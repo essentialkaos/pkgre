@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            4.0.0
+Version:            4.1.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            Apache License, Version 2.0
@@ -153,6 +153,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Tue Dec 08 2020 Anton Novojilov <andy@essentialkaos.com> - 4.1.0-0
+- Fixed bug with proxying requests to GitHub
+
 * Thu Nov 12 2020 Anton Novojilov <andy@essentialkaos.com> - 4.0.0-0
 - Proxying all requests due to problems with Go Modules Services
 - ek package updated to v12
