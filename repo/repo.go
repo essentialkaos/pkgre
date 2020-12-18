@@ -23,6 +23,8 @@ type Info struct {
 	Target string
 }
 
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 var userValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_-]{2,}`)
 var nameValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_.-]{2,}`)
 var pathValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_.-/]{0,}`)
@@ -41,12 +43,7 @@ func ParsePath(path string) (*Info, error) {
 		return nil, errors.New("Unsupported URL pattern")
 	}
 
-	var (
-		repoUser   string
-		repoName   string
-		repoTarget string
-		repoPath   string
-	)
+	var repoUser, repoName, repoTarget, repoPath string
 
 	// Check short notation (pkg.re/mgo or pkg.re/mgo.v1)
 	if strings.Contains(pathSlice[1], ".") || len(pathSlice) == 2 {
@@ -100,7 +97,7 @@ func ParsePath(path string) (*Info, error) {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// GitHubRoot return github root path e.g. github.com/user/project
+// GitHubRoot returns GitHub root path e.g. github.com/user/project
 func (i *Info) GitHubRoot() string {
 	if i.User == "" {
 		return "github.com/go-" + i.Name + "/" + i.Name
@@ -109,7 +106,7 @@ func (i *Info) GitHubRoot() string {
 	return "github.com/" + i.User + "/" + i.Name
 }
 
-// GitHubURL return url of repository on github
+// GitHubURL returns URL of repository on github
 func (i *Info) GitHubURL(branchOrName string) string {
 	url := "https://" + i.GitHubRoot()
 
@@ -124,7 +121,18 @@ func (i *Info) GitHubURL(branchOrName string) string {
 	return url
 }
 
-// Root return root path for some repo e.g. user/project.target
+// GoDevURL returns URL of pkg.go.dev page with package documentation
+func (i *Info) GoDevURL(path, branchOrName string) string {
+	url := "https://pkg.go.dev/pkg.re/" + path
+
+	if !strings.HasPrefix(branchOrName, "v1.") && !strings.HasPrefix(branchOrName, "v0.") {
+		url += "@" + branchOrName + "+incompatible"
+	}
+
+	return url
+}
+
+// Root returns root path for some repo e.g. user/project.target
 func (i *Info) Root() string {
 	var target = ""
 
@@ -139,7 +147,7 @@ func (i *Info) Root() string {
 	return i.User + "/" + i.Name + target
 }
 
-// FullPath return full path e.g. user/project.target/some/part
+// FullPath returns full path e.g. user/project.target/some/part
 func (i *Info) FullPath() string {
 	if i.Path != "" {
 		return i.Root() + "/" + i.Path

@@ -26,12 +26,13 @@ Note that pkg.re does not hold the package code.
 ### Routing examples
 
 ```
-go get pkg.re/essentialkaos/ek.v1      → github.com/essentialkaos/ek tag/branch v1.x.x
-go get pkg.re/essentialkaos/ek.v1.6    → github.com/essentialkaos/ek tag/branch v1.6.x
-go get pkg.re/essentialkaos/ek.v1.6.8  → github.com/essentialkaos/ek tag/branch v1.6.8
-go get pkg.re/essentialkaos/ek.develop → github.com/essentialkaos/ek tag/branch develop
-go get pkg.re/check.v1                 → github.com/go-check/check tag/branch v1.x.x
-https://pkg.re/essentialkaos/ek.v1     → https://github.com/essentialkaos/ek/tree/v1.x.x
+go get pkg.re/essentialkaos/ek.v1        → github.com/essentialkaos/ek tag/branch v1.x.x
+go get pkg.re/essentialkaos/ek.v1.6      → github.com/essentialkaos/ek tag/branch v1.6.x
+go get pkg.re/essentialkaos/ek.v1.6.8    → github.com/essentialkaos/ek tag/branch v1.6.8
+go get pkg.re/essentialkaos/ek.develop   → github.com/essentialkaos/ek tag/branch develop
+go get pkg.re/check.v1                   → github.com/go-check/check tag/branch v1.x.x
+https://pkg.re/essentialkaos/ek.v1       → https://github.com/essentialkaos/ek/tree/v1.x.x
+https://pkg.re/essentialkaos/ek.v1?docs  → https://pkg.go.dev/pkg.re/essentialkaos/ek.v1
 ```
 
 `x` - latest available version
