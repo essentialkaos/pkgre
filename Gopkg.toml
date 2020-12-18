@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/valyala/fasthttp"
-  version = "1.17.0"
+  version = "1.18.0"
 
 [[constraint]]
   branch = "master"
@@ -8,7 +8,7 @@
 
 [[constraint]]
   name = "pkg.re/essentialkaos/ek.v12"
-  version = "12.10.0"
+  version = "12.11.0"
 
 [prune]
   go-tests = true
