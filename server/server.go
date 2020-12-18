@@ -31,7 +31,7 @@ import (
 // Application info
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "4.2.0"
+	VER  = "4.2.1"
 	DESC = "HTTP Server for morphing go get requests"
 )
 

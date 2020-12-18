@@ -10,7 +10,7 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:8d029fb6638c2f922b8b5a33aef0f07a44542a97a0cf89bf871dd837f6b3252d"
+  digest = "1:31d6e66ab882fae8534e01407a9cd6c036a51706a04adfe6912efaaf18989d20"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
@@ -18,8 +18,16 @@
     "zlib",
   ]
   pruneopts = "UT"
-  revision = "456984a7ed625447418279c10e2a8b6e357aa267"
-  version = "v1.11.2"
+  revision = "ff4a4acf3be7ac7b0b1c3381000e0216eb9e956f"
+  version = "v1.11.3"
+
+[[projects]]
+  digest = "1:759375161ead34b8a830e14e75196bb51a999f125531d2faf0a1a944551a586f"
+  name = "github.com/kr/pretty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ead452280cd055b2ae8a7f0db5eb37a878d902f7"
+  version = "v0.2.1"
 
 [[projects]]
   digest = "1:7218fd69ff5436d016101bbc6183cdc289aa45ac37b48e78846318e4ef389bea"
@@ -30,14 +38,6 @@
   version = "v0.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4454a22e87e1aacfb4c7e9550ab98c711a5285a0cc7f9ff8952c44a9b0dbbb05"
-  name = "github.com/niemeyer/pretty"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "a10e7caefd8e0d600cea437f5c3613aeb1553d56"
-
-[[projects]]
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
@@ -46,7 +46,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:a8580c4e2a628114325d82f8bc6557b888ae93ac453a849ddbc9c1787de09246"
+  digest = "1:8b729ea12d4304a0841ad2946f479b5f746eb663d053e43b4dfd220a7304098d"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -54,16 +54,16 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "74bd13a169aebf95983bd28a22d69ff5969665cc"
-  version = "v1.17.0"
+  revision = "d0dfbd4494632e4bf398d1c0098e4c389a1c4356"
+  version = "v1.18.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:bcc487fe614a1d561dfc3fd179328f5e9777ceaea29cdb25b775309e9b85858d"
+  digest = "1:b39f3febddd151ee9993a0a10c20393efeddb1d31c0c706c9d03d054dbafd308"
   name = "pkg.re/check.v1"
   packages = ["."]
   pruneopts = "UT"
-  revision = "038fdea0a05bc030b0bfda479dc2e08d2220ec74"
+  revision = "10cb98267c6cb43ea9cd6793f29ff4089c306974"
 
 [[projects]]
   digest = "1:904f7cbc12855430f0d164541cdd3ade6026373835fcdf6d3ce320a30789bab4"
@@ -87,8 +87,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "f5be0b2efabbb624246ed395ede96a96dbd9c563"
-  version = "v12.10.0"
+  revision = "00c0a837aeb511ce64760297eb140bf73626e88f"
+  version = "v12.11.0"
 
 [solve-meta]
   analyzer-name = "dep"

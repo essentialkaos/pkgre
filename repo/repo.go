@@ -123,10 +123,10 @@ func (i *Info) GitHubURL(branchOrName string) string {
 
 // GoDevURL returns URL of pkg.go.dev page with package documentation
 func (i *Info) GoDevURL(path, branchOrName string) string {
-	url := "https://pkg.go.dev/pkg.re/" + path
+	url := "https://pkg.go.dev/pkg.re/" + path + "@" + branchOrName
 
 	if !strings.HasPrefix(branchOrName, "v1.") && !strings.HasPrefix(branchOrName, "v0.") {
-		url += "@" + branchOrName + "+incompatible"
+		url += "+incompatible"
 	}
 
 	return url
