@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -39,6 +38,8 @@ const (
 )
 
 const USER_AGENT = "PkgRE-Morpher"
+
+const DOC_QUERY_ARG = "docs"
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
@@ -148,12 +149,6 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	// Redirect to documentation
-	if strings.Contains(path, "#") {
-		processDocsRequest(ctx, start, path)
-		return
-	}
-
 	repoInfo, err := repo.ParsePath(path)
 
 	if err != nil {
@@ -195,18 +190,24 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	// Redirect to pkg.go.dev
+	if ctx.QueryArgs().Has(DOC_QUERY_ARG) {
+		processDocsRequest(ctx, start, path, repoInfo, pkgInfo)
+		return
+	}
+
 	appendProcHeader(ctx, start)
 
-	url := repoInfo.GitHubURL(pkgInfo.TargetName)
+	ghURL := repoInfo.GitHubURL(pkgInfo.TargetName)
 
 	// Proxy only requests from Go and Git
 	if bytes.HasPrefix(ctx.UserAgent(), UAGit) || bytes.HasPrefix(ctx.UserAgent(), UAGo) {
-		log.Debug("Proxying request to %s", url)
-		proxyRequest(ctx, url)
+		log.Debug("Proxying request to %s", ghURL)
+		proxyRequest(ctx, ghURL)
 	} else {
 		atomic.AddUint64(&metrics.Redirects, 1)
-		log.Debug("Redirecting request to %s", url)
-		redirectRequest(ctx, url)
+		log.Debug("Redirecting request to %s", ghURL)
+		redirectRequest(ctx, ghURL)
 	}
 }
 
@@ -233,10 +234,10 @@ func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 }
 
 // processDocsRequest redirect request to godoc.org
-func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string) {
+func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, repoInfo *repo.Info, pkgInfo *PkgInfo) {
 	atomic.AddUint64(&metrics.Docs, 1)
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, "https://godoc.org/pkg.re"+path)
+	redirectRequest(ctx, repoInfo.GoDevURL(path, pkgInfo.TargetName))
 }
 
 // processUploadPackRequest redirect git-upload-pack request to GitHub

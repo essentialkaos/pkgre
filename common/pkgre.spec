@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            4.1.0
+Version:            4.2.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            Apache License, Version 2.0
@@ -153,6 +153,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Fri Dec 18 2020 Anton Novojilov <andy@essentialkaos.com> - 4.2.0-0
+- Added redirect to pkg.go.dev
+
 * Tue Dec 08 2020 Anton Novojilov <andy@essentialkaos.com> - 4.1.0-0
 - Fixed bug with proxying requests to GitHub
 
