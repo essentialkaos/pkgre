@@ -155,6 +155,7 @@ rm -rf %{buildroot}
 %changelog
 * Fri Dec 18 2020 Anton Novojilov <andy@essentialkaos.com> - 4.2.1-0
 - Improved URL generation for pkg.go.dev redirect
+- Dependencies updated to the latest versions
 
 * Fri Dec 18 2020 Anton Novojilov <andy@essentialkaos.com> - 4.2.0-0
 - Added redirect to pkg.go.dev
