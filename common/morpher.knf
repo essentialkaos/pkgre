@@ -16,6 +16,11 @@
   # URL for redirect non-system request
   redirect: https://pkg.re
 
+[healthcheck]
+
+  # URL of healthcheck service
+  url: 
+
 [log]
 
   # Minimal log level (debug/info/warn/error/crit)

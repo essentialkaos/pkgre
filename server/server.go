@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"pkg.re/essentialkaos/ek.v12/fmtc"
 	"pkg.re/essentialkaos/ek.v12/knf"
@@ -23,6 +24,7 @@ import (
 	knfv "pkg.re/essentialkaos/ek.v12/knf/validators"
 	knff "pkg.re/essentialkaos/ek.v12/knf/validators/fs"
 
+	"github.com/essentialkaos/pkgre/server/healthcheck"
 	"github.com/essentialkaos/pkgre/server/morpher"
 )
 
@@ -31,7 +33,7 @@ import (
 // Application info
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "4.2.1"
+	VER  = "4.3.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -53,14 +55,15 @@ const (
 
 // Configuration file properties names
 const (
-	MAIN_PROCS    = "main:procs"
-	HTTP_IP       = "http:ip"
-	HTTP_PORT     = "http:port"
-	HTTP_REDIRECT = "http:redirect"
-	LOG_LEVEL     = "log:level"
-	LOG_DIR       = "log:dir"
-	LOG_FILE      = "log:file"
-	LOG_PERMS     = "log:perms"
+	MAIN_PROCS      = "main:procs"
+	HTTP_IP         = "http:ip"
+	HTTP_PORT       = "http:port"
+	HTTP_REDIRECT   = "http:redirect"
+	HEALTHCHECK_URL = "healthcheck:url"
+	LOG_LEVEL       = "log:level"
+	LOG_DIR         = "log:dir"
+	LOG_FILE        = "log:file"
+	LOG_PERMS       = "log:perms"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -128,6 +131,10 @@ func prepare() {
 
 	validateConfig()
 	setupLogger()
+
+	runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
+
+	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
 }
 
 // validateConfig validate config values
@@ -169,9 +176,9 @@ func setupLogger() {
 
 // start start web server
 func start() {
-	runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
-
-	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
+	if knf.HasProp(HEALTHCHECK_URL) {
+		healthcheck.Start(knf.GetS(HEALTHCHECK_URL), time.Minute)
+	}
 
 	err := morpher.Start(VER)
 
