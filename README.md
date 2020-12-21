@@ -7,7 +7,7 @@
   <a href="https://codebeat.co/projects/github-com-essentialkaos-pkgre-master"><img alt="codebeat badge" src="https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9" /></a>
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
-<p>
+<p align="center">
   <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/sKjRtflJ-2/server.svg" /></a>
   <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/2FbciL3K-2/morpher.svg" /></a>
 </p>
