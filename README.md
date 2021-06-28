@@ -1,12 +1,13 @@
 <p align="center"><img src="https://gh.kaos.st/pkgre.svg"/></p>
 
 <p align="center">
-  <a href="https://github.com/essentialkaos/pkgre/actions"><img src="https://github.com/essentialkaos/pkgre/workflows/CI/badge.svg" alt="GitHub Actions Status" /></a>
-  <a href="https://github.com/essentialkaos/pkgre/actions?query=workflow%3ACodeQL"><img src="https://github.com/essentialkaos/pkgre/workflows/CodeQL/badge.svg" /></a>
-  <a href="https://goreportcard.com/report/github.com/essentialkaos/pkgre"><img src="https://goreportcard.com/badge/github.com/essentialkaos/pkgre" /></a>
-  <a href="https://codebeat.co/projects/github-com-essentialkaos-pkgre-master"><img alt="codebeat badge" src="https://codebeat.co/badges/f29ed07b-af32-4d45-a342-59b20e3bfcf9" /></a>
+  <a href="https://kaos.sh/w/pkgre/ci"><img src="https://kaos.sh/w/pkgre/ci.svg" alt="GitHub Actions CI Status" /></a>
+  <a href="https://kaos.sh/w/pkgre/codeql"><img src="https://kaos.sh/w/pkgre/codeql.svg" alt="GitHub Actions CodeQL Status" /></a>
+  <a href="https://kaos.sh/r/pkgre"><img src="https://kaos.sh/r/pkgre.svg" alt="GoReportCard" /></a>
+  <a href="https://kaos.sh/b/pkgre"><img src="https://kaos.sh/b/f29ed07b-af32-4d45-a342-59b20e3bfcf9.svg" alt="Codebeat badge" /></a>
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
+
 <p align="center">
   <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/sKjRtflJ-2/server.svg" /></a>
   <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/2FbciL3K-2/morpher.svg" /></a>
