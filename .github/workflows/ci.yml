@@ -115,6 +115,11 @@ jobs:
         with:
           path: ${{env.SRC_DIR}}
 
+      - name: Install deps
+        run: |
+          mkdir -p $GOBIN
+          curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
       - name: Download dependencies
         working-directory: ${{env.SRC_DIR}}
         run: make deps
