@@ -176,7 +176,13 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	targetType, targetName := suggestHead(repoInfo, refsInfo)
-	pkgInfo := &PkgInfo{repoInfo, refsInfo, path, targetType, targetName}
+	pkgInfo := &PkgInfo{
+		RepoInfo:   repoInfo,
+		RefsInfo:   refsInfo,
+		Path:       path,
+		TargetType: targetType,
+		TargetName: targetName,
+	}
 
 	// Rewrite refs
 	if repoInfo.Path == "info/refs" {
