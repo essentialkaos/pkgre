@@ -45,11 +45,11 @@ const DOC_QUERY_ARG = "docs"
 
 // PkgInfo is struct with package info
 type PkgInfo struct {
+	Path       string
+	TargetName string
 	RepoInfo   *repo.Info
 	RefsInfo   *refs.Info
-	Path       string
 	TargetType refs.RefType
-	TargetName string
 }
 
 // Metrics is struct with metrics data
