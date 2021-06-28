@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            4.3.0
+Version:            4.4.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            Apache License, Version 2.0
@@ -64,7 +64,7 @@ Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:      golang >= 1.14
+BuildRequires:      golang >= 1.16
 
 Requires:           systemd
 
@@ -153,6 +153,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Tue Jun 29 2021 Anton Novojilov <andy@essentialkaos.com> - 4.4.0-0
+- Dependencies updated to the latest versions
+
 * Mon Dec 21 2020 Anton Novojilov <andy@essentialkaos.com> - 4.3.0-0
 - Sending healthcheck requests
 
