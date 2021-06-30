@@ -2,7 +2,7 @@ package morpher
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                         Copyright (c) 2020 ESSENTIAL KAOS                          //
+//                         Copyright (c) 2021 ESSENTIAL KAOS                          //
 //      Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>     //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -45,11 +45,11 @@ const DOC_QUERY_ARG = "docs"
 
 // PkgInfo is struct with package info
 type PkgInfo struct {
+	Path       string
+	TargetName string
 	RepoInfo   *repo.Info
 	RefsInfo   *refs.Info
-	Path       string
 	TargetType refs.RefType
-	TargetName string
 }
 
 // Metrics is struct with metrics data
@@ -176,7 +176,13 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	targetType, targetName := suggestHead(repoInfo, refsInfo)
-	pkgInfo := &PkgInfo{repoInfo, refsInfo, path, targetType, targetName}
+	pkgInfo := &PkgInfo{
+		RepoInfo:   repoInfo,
+		RefsInfo:   refsInfo,
+		Path:       path,
+		TargetType: targetType,
+		TargetName: targetName,
+	}
 
 	// Rewrite refs
 	if repoInfo.Path == "info/refs" {

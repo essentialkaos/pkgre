@@ -2,15 +2,15 @@
 
 
 [[projects]]
-  digest = "1:3bfdfb3f1e89263734e9dd6d65a00ad0d4886750061439b7da2a8ab753a2ecf4"
+  digest = "1:f140dbd6d3c8ba2f7bde03b7d39530d233ed400d91576ac43660aacea587849d"
   name = "github.com/andybalholm/brotli"
   packages = ["."]
   pruneopts = "UT"
-  revision = "729edfbcfeaad43a6412c185205501ec80773250"
-  version = "v1.0.1"
+  revision = "5376c15dde3fd4247febd5a3b4ac9708d2d6faff"
+  version = "v1.0.3"
 
 [[projects]]
-  digest = "1:31d6e66ab882fae8534e01407a9cd6c036a51706a04adfe6912efaaf18989d20"
+  digest = "1:e377cb0e163dcc88ea2b87a8e3f62abc3229ddbd6e20ece13f5f80b673e5614f"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
@@ -18,8 +18,8 @@
     "zlib",
   ]
   pruneopts = "UT"
-  revision = "ff4a4acf3be7ac7b0b1c3381000e0216eb9e956f"
-  version = "v1.11.3"
+  revision = "5453ad3645a8c3a61091d6508d3d0e32ad950b79"
+  version = "v1.13.1"
 
 [[projects]]
   digest = "1:759375161ead34b8a830e14e75196bb51a999f125531d2faf0a1a944551a586f"
@@ -46,7 +46,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:8b729ea12d4304a0841ad2946f479b5f746eb663d053e43b4dfd220a7304098d"
+  digest = "1:fad1aeae72dfb041868236466dfa03daba77c923254a30db774166abbdc088bd"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -54,19 +54,19 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "d0dfbd4494632e4bf398d1c0098e4c389a1c4356"
-  version = "v1.18.0"
+  revision = "874c8cad76f8bb0a0ee59cf7f749016e7b4cfcf4"
+  version = "v1.27.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b39f3febddd151ee9993a0a10c20393efeddb1d31c0c706c9d03d054dbafd308"
-  name = "pkg.re/check.v1"
+  digest = "1:41609162109a3dfa19f3ae290696e594f989aa646a3d4595d7e94ee96ffed072"
+  name = "pkg.re/essentialkaos/check.v1"
   packages = ["."]
   pruneopts = "UT"
-  revision = "10cb98267c6cb43ea9cd6793f29ff4089c306974"
+  revision = "f4374f852de5d45996a5baf0b71865d1096185d4"
+  version = "v1.0.0"
 
 [[projects]]
-  digest = "1:904f7cbc12855430f0d164541cdd3ade6026373835fcdf6d3ce320a30789bab4"
+  digest = "1:dca937719a6211a7decf209c19c6ee1385aa7975927f868a1d11cf4adb3ae690"
   name = "pkg.re/essentialkaos/ek.v12"
   packages = [
     "env",
@@ -87,15 +87,15 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "00c0a837aeb511ce64760297eb140bf73626e88f"
-  version = "v12.11.0"
+  revision = "ce458cfce7e3a5d26987ffb116366955d43eba52"
+  version = "v12.20.4"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/valyala/fasthttp",
-    "pkg.re/check.v1",
+    "pkg.re/essentialkaos/check.v1",
     "pkg.re/essentialkaos/ek.v12/fmtc",
     "pkg.re/essentialkaos/ek.v12/knf",
     "pkg.re/essentialkaos/ek.v12/knf/validators",
