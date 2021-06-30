@@ -87,6 +87,7 @@ pkg.re service morpher server.
 
 %build
 export GOPATH=$(pwd)
+export GO111MODULE=auto
 
 pushd src/github.com/essentialkaos/%{name}
   %{__make} %{?_smp_mflags} all
