@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        go: [ '1.15.x', '1.16.x' ]
+        go: [ '1.16.x', '1.17.x' ]
 
     steps:
       - name: Set up Go
@@ -72,20 +72,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Run Perfecto docker image
-        uses: docker://essentialkaos/perfecto:micro
+      - name: Check specs with Perfecto
+        uses: essentialkaos/perfecto-action@v1
         with:
-          args: --version
-
-      - name: Install perfecto-docker
-        run: |
-          wget https://kaos.sh/perfecto/perfecto-docker
-          chmod +x perfecto-docker
-
-      - name: Run Perfecto check
-        env:
-          IMAGE: essentialkaos/perfecto:micro
-        run: ./perfecto-docker common/pkgre.spec
+          files: common/pkgre.spec
 
   Aligo:
     name: Aligo
@@ -124,16 +114,8 @@ jobs:
         working-directory: ${{env.SRC_DIR}}
         run: make deps
 
-      - name: Install Aligo
-        working-directory: ${{env.SRC_DIR}}
-        run: |
-          wget https://apps.kaos.st/aligo/latest/linux/x86_64/aligo
-          chmod +x aligo
-
-      - name: Print Aligo version info
-        working-directory: ${{env.SRC_DIR}}
-        run: ./aligo --version
-
-      - name: Check Go structs alignment info
-        working-directory: ${{env.SRC_DIR}}
-        run: ./aligo check ./...
+      - name: Check Golang sources with Aligo
+        uses: essentialkaos/aligo-action@v1
+        with:
+          path: ${{env.SRC_DIR}}
+          files: ./...
