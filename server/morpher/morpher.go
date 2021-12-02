@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -27,14 +28,16 @@ import (
 	"github.com/essentialkaos/pkgre/repo"
 
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/reuseport"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
-	HTTP_IP       = "http:ip"
-	HTTP_PORT     = "http:port"
-	HTTP_REDIRECT = "http:redirect"
+	HTTP_IP        = "http:ip"
+	HTTP_PORT      = "http:port"
+	HTTP_REDIRECT  = "http:redirect"
+	HTTP_REUSEPORT = "http:reuserport"
 )
 
 const USER_AGENT = "PkgRE-Morpher"
@@ -86,6 +89,9 @@ var goGetTemplate = template.Must(template.New("").Parse(`<html>
 </html>
 `))
 
+// server is main HTTP server
+var server *fasthttp.Server
+
 // client is default client for all http requests
 var client *fasthttp.Client
 
@@ -100,19 +106,49 @@ var metrics = &Metrics{}
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// Start start HTTP server
+// Start starts HTTP server
 func Start(version string) error {
 	daemonVersion = version
 
 	initHTTPClients()
 
-	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
+	addr := knf.GetS(HTTP_IP) + ":" + knf.GetS(HTTP_PORT)
 
-	return fasthttp.ListenAndServe(knf.GetS(HTTP_IP)+":"+knf.GetS(HTTP_PORT), requestHandler)
+	log.Info("Morpher HTTP server will be started on %s", addr)
+
+	server = &fasthttp.Server{
+		Name:    USER_AGENT + "/" + daemonVersion,
+		Handler: requestHandler,
+	}
+
+	var err error
+	var ln net.Listener
+
+	if knf.GetB(HTTP_REUSEPORT, false) {
+		ln, err = net.Listen("tcp4", addr)
+	} else {
+		ln, err = reuseport.Listen("tcp4", addr)
+	}
+
+	if err != nil {
+		return fmt.Errorf("Can't create listener on %s: %v", addr, err)
+	}
+
+	return server.Serve(ln)
+}
+
+// Stop stops HTTP server
+func Stop() error {
+	if server == nil {
+		return nil
+	}
+
+	return server.Shutdown()
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// initHTTPClients initializes basic clients
 func initHTTPClients() {
 	client = &fasthttp.Client{
 		Name:                USER_AGENT + "/" + daemonVersion,
@@ -131,6 +167,7 @@ func initHTTPClients() {
 	}
 }
 
+// requestHandler is a main request handler
 func requestHandler(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
 
@@ -223,7 +260,7 @@ func processBasicRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	redirectRequest(ctx, knf.GetS(HTTP_REDIRECT))
 }
 
-// processMetricsRequest return metrics
+// processMetricsRequest writes metrics response
 func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	appendProcHeader(ctx, start)
 
@@ -239,14 +276,14 @@ func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	ctx.WriteString(data)
 }
 
-// processDocsRequest redirect request to godoc.org
+// processDocsRequest redirects request to godoc.org
 func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, repoInfo *repo.Info, pkgInfo *PkgInfo) {
 	atomic.AddUint64(&metrics.Docs, 1)
 	appendProcHeader(ctx, start)
 	redirectRequest(ctx, repoInfo.GoDevURL(path, pkgInfo.TargetName))
 }
 
-// processUploadPackRequest redirect git-upload-pack request to GitHub
+// processUploadPackRequest redirects git-upload-pack request to GitHub
 func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInfo *repo.Info) {
 	appendProcHeader(ctx, start)
 
@@ -256,7 +293,7 @@ func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInf
 	proxyRequest(ctx, url)
 }
 
-// processRefsRequest process request for refs
+// processRefsRequest processes request for refs
 func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
 	if pkgInfo.TargetName != "" {
 		switch pkgInfo.TargetType {
@@ -286,7 +323,7 @@ func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgI
 	ctx.Write(pkgInfo.RefsInfo.Rewrite(pkgInfo.TargetName, pkgInfo.TargetType))
 }
 
-// processGoGetRequest process "go get" requests
+// processGoGetRequest processes "go get" requests
 func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
 	appendProcHeader(ctx, start)
 
@@ -313,25 +350,25 @@ func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *Pkg
 	atomic.AddUint64(&metrics.Goget, 1)
 }
 
-// notFoundResponse write 404 response
+// notFoundResponse writes 404 response
 func notFoundResponse(ctx *fasthttp.RequestCtx, data string) {
 	ctx.SetStatusCode(http.StatusNotFound)
 	ctx.WriteString(data + "\n")
 }
 
-// appendProcHeader append header with processing time
+// appendProcHeader appends header with processing time
 func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
 	ctx.Response.Header.Set("Server", "PKGRE Morpher")
 	ctx.Response.Header.Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
 }
 
-// redirectRequest add redirect header to repsponse
+// redirectRequest appends redirect header to response
 func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Set("Location", url)
 	ctx.SetStatusCode(http.StatusTemporaryRedirect)
 }
 
-// proxyRequest proxy request to GitHub
+// proxyRequest proxies request to GitHub
 func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Request.Header.Del("Connection")
 	ctx.Request.SetRequestURI(url)
@@ -345,7 +382,7 @@ func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Del("Connection")
 }
 
-// requestRecover recover panic in request
+// requestRecover recovers panic in request
 func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
 	r := recover()
 
@@ -381,7 +418,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	return refs, nil
 }
 
-// suggestHead return best fit head
+// suggestHead returns best fit head
 func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string) {
 	// If target is empty we do not change refs head
 	if repoInfo.Target == "" {
@@ -440,7 +477,7 @@ func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string
 	return refs.TYPE_UNKNOWN, ""
 }
 
-// getCleanVer return only version digits without any prefix (v/r/ver/version/etc...)
+// getCleanVer returns version digits without any prefix (v/r/ver/version/etc...)
 func getCleanVer(v string) string {
 	vf := majorVerRegExp.FindStringSubmatch(v)
 

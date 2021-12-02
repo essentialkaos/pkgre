@@ -54,7 +54,7 @@
 
 Summary:            pkg.re morpher server
 Name:               pkgre
-Version:            4.4.0
+Version:            5.0.0
 Release:            0%{?dist}
 Group:              Applications/System
 License:            Apache License, Version 2.0
@@ -154,6 +154,11 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Fri Dec 03 2021 Anton Novojilov <andy@essentialkaos.com> - 5.0.0-0
+- Dependencies updated to the latest versions
+- Added graceful shutdown
+- Added reuseport listener support
+
 * Tue Jun 29 2021 Anton Novojilov <andy@essentialkaos.com> - 4.4.0-0
 - Dependencies updated to the latest versions
 

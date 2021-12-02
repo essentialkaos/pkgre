@@ -2,15 +2,15 @@
 
 
 [[projects]]
-  digest = "1:f140dbd6d3c8ba2f7bde03b7d39530d233ed400d91576ac43660aacea587849d"
+  digest = "1:deea993aaff11328ec17cbdd3461d6956b691c0c908e44bf8e41465395cf69a6"
   name = "github.com/andybalholm/brotli"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5376c15dde3fd4247febd5a3b4ac9708d2d6faff"
-  version = "v1.0.3"
+  revision = "1d750214c25205863625bb3eb8190a51b2cef26d"
+  version = "v1.0.4"
 
 [[projects]]
-  digest = "1:e377cb0e163dcc88ea2b87a8e3f62abc3229ddbd6e20ece13f5f80b673e5614f"
+  digest = "1:f079e7f44389c9acf27b083f065dad6ae532be19ada6c2f37aca0fa3034c82e9"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
@@ -18,16 +18,16 @@
     "zlib",
   ]
   pruneopts = "UT"
-  revision = "5453ad3645a8c3a61091d6508d3d0e32ad950b79"
-  version = "v1.13.1"
+  revision = "38d4ba985ac157cb858763e016645e14e74c13c4"
+  version = "v1.13.6"
 
 [[projects]]
-  digest = "1:759375161ead34b8a830e14e75196bb51a999f125531d2faf0a1a944551a586f"
+  digest = "1:ff083444f22a7320b29bed18a99e5d453779e83dea3888cbd1fc1e7fc7bc0508"
   name = "github.com/kr/pretty"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ead452280cd055b2ae8a7f0db5eb37a878d902f7"
-  version = "v0.2.1"
+  revision = "a883a8422cd235c67c6c4fdcb7bbb022143e10b1"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:7218fd69ff5436d016101bbc6183cdc289aa45ac37b48e78846318e4ef389bea"
@@ -38,6 +38,14 @@
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:b8f733177a76e4f27bb137c131873a65f04c70599c212979ef4b2be5e2f6fc27"
+  name = "github.com/rogpeppe/go-internal"
+  packages = ["fmtsort"]
+  pruneopts = "UT"
+  revision = "8ef127344c684f0eb23e5eea40f303b74de097b2"
+  version = "v1.8.0"
+
+[[projects]]
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
@@ -46,16 +54,36 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:fad1aeae72dfb041868236466dfa03daba77c923254a30db774166abbdc088bd"
+  digest = "1:ce2c42625a6de16b285b8df4f5bdfc866a412a875afa558b70027b20a817362b"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
     "fasthttputil",
+    "reuseport",
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "874c8cad76f8bb0a0ee59cf7f749016e7b4cfcf4"
-  version = "v1.27.0"
+  revision = "81fc96827033a5ee92d8a098ab1cdb9827e1eb8d"
+  version = "v1.31.0"
+
+[[projects]]
+  digest = "1:3a1cfe47c5aa1c712c7aaeefd182e8ef989521a0d4c98ba108c226827499de9e"
+  name = "github.com/valyala/tcplisten"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "652d3b4b296a7d12eef014b68be535afda1b7341"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b3e07102ccd1ecb3f25e38575558f4fcb6d288eb05d7af8b0ac48afbcd8ba225"
+  name = "golang.org/x/sys"
+  packages = [
+    "internal/unsafeheader",
+    "windows",
+  ]
+  pruneopts = "UT"
+  revision = "fe61309f888157de161a48facf03d9412635cffe"
 
 [[projects]]
   digest = "1:41609162109a3dfa19f3ae290696e594f989aa646a3d4595d7e94ee96ffed072"
@@ -66,7 +94,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:dca937719a6211a7decf209c19c6ee1385aa7975927f868a1d11cf4adb3ae690"
+  digest = "1:e5a49400954cf634fec61626a7f4ffc3fe860ea947954f49480b04b15e89821b"
   name = "pkg.re/essentialkaos/ek.v12"
   packages = [
     "env",
@@ -87,14 +115,15 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "ce458cfce7e3a5d26987ffb116366955d43eba52"
-  version = "v12.20.4"
+  revision = "16f511e642be3a0a8cb1aff27e617ea937002e73"
+  version = "v12.36.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/valyala/fasthttp",
+    "github.com/valyala/fasthttp/reuseport",
     "pkg.re/essentialkaos/check.v1",
     "pkg.re/essentialkaos/ek.v12/fmtc",
     "pkg.re/essentialkaos/ek.v12/knf",

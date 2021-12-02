@@ -2,7 +2,7 @@
 
 [main]
 
-  # Number of procs
+  # Maximum number of processes
   procs: 4
 
 [http]
@@ -15,6 +15,9 @@
 
   # URL for redirect non-system request
   redirect: https://pkg.re
+
+  # Use reuseport listener for HTTP server
+  reuseport: false
 
 [healthcheck]
 

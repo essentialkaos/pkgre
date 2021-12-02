@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/valyala/fasthttp"
-  version = "1.27.0"
+  version = "1.31.0"
 
 [[constraint]]
   name = "pkg.re/essentialkaos/check.v1"
@@ -8,7 +8,7 @@
 
 [[constraint]]
   name = "pkg.re/essentialkaos/ek.v12"
-  version = "12.20.4"
+  version = "12.36.0"
 
 [prune]
   go-tests = true
