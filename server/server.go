@@ -22,6 +22,7 @@ import (
 
 	knfv "pkg.re/essentialkaos/ek.v12/knf/validators"
 	knff "pkg.re/essentialkaos/ek.v12/knf/validators/fs"
+	knfn "pkg.re/essentialkaos/ek.v12/knf/validators/network"
 
 	"github.com/essentialkaos/pkgre/server/healthcheck"
 	"github.com/essentialkaos/pkgre/server/morpher"
@@ -55,10 +56,11 @@ const (
 // Configuration file properties names
 const (
 	MAIN_PROCS      = "main:procs"
+	MAIN_DOMAIN     = "main:domain"
 	HTTP_IP         = "http:ip"
 	HTTP_PORT       = "http:port"
 	HTTP_REDIRECT   = "http:redirect"
-	HTTP_REUSEPORT  = "http:reuserport"
+	HTTP_REUSEPORT  = "http:reuseport"
 	HEALTHCHECK_URL = "healthcheck:url"
 	LOG_LEVEL       = "log:level"
 	LOG_DIR         = "log:dir"
@@ -141,11 +143,22 @@ func prepare() {
 // validateConfig validate config values
 func validateConfig() {
 	errs := knf.Validate([]*knf.Validator{
+		{MAIN_DOMAIN, knfv.Empty, nil},
+		{HTTP_REDIRECT, knfv.Empty, nil},
+
 		{MAIN_PROCS, knfv.Less, MIN_PROCS},
 		{MAIN_PROCS, knfv.Greater, MAX_PROCS},
 		{HTTP_PORT, knfv.Less, MIN_PORT},
 		{HTTP_PORT, knfv.Greater, MAX_PORT},
+
+		{HTTP_REDIRECT, knfn.URL, nil},
+		{HEALTHCHECK_URL, knfn.URL, nil},
+
 		{LOG_DIR, knff.Perms, "DWX"},
+
+		{LOG_LEVEL, knfv.NotContains, []string{
+			"debug", "info", "warn", "error", "crit",
+		}},
 	})
 
 	if len(errs) != 0 {

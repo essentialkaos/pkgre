@@ -94,7 +94,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:e5a49400954cf634fec61626a7f4ffc3fe860ea947954f49480b04b15e89821b"
+  digest = "1:9b050a7ebd8cf335b5f90c3023fdac844debd5e8ba0e14093f05ea9d4e06f58f"
   name = "pkg.re/essentialkaos/ek.v12"
   packages = [
     "env",
@@ -103,6 +103,7 @@
     "knf",
     "knf/validators",
     "knf/validators/fs",
+    "knf/validators/network",
     "log",
     "mathutil",
     "options",
@@ -129,6 +130,7 @@
     "pkg.re/essentialkaos/ek.v12/knf",
     "pkg.re/essentialkaos/ek.v12/knf/validators",
     "pkg.re/essentialkaos/ek.v12/knf/validators/fs",
+    "pkg.re/essentialkaos/ek.v12/knf/validators/network",
     "pkg.re/essentialkaos/ek.v12/log",
     "pkg.re/essentialkaos/ek.v12/options",
     "pkg.re/essentialkaos/ek.v12/signal",

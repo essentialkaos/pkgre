@@ -34,6 +34,7 @@ import (
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
+	MAIN_DOMAIN    = "main:domain"
 	HTTP_IP        = "http:ip"
 	HTTP_PORT      = "http:port"
 	HTTP_REDIRECT  = "http:redirect"
@@ -50,6 +51,7 @@ const DOC_QUERY_ARG = "docs"
 type PkgInfo struct {
 	Path       string
 	TargetName string
+	Domain     string
 	RepoInfo   *repo.Info
 	RefsInfo   *refs.Info
 	TargetType refs.RefType
@@ -80,11 +82,11 @@ var majorVerRegExp = regexp.MustCompile(`^[a-zA-Z]{0,}([0-9]{1}.*)`)
 // goGetTemplate is template used for go get command response
 var goGetTemplate = template.Must(template.New("").Parse(`<html>
   <head>
-    <meta name="go-import" content="pkg.re/{{.RepoInfo.Root}} git https://pkg.re/{{.RepoInfo.Root}}" />
-    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .TargetName}}<meta name="go-source" content="pkg.re/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
+    <meta name="go-import" content="{{.Domain}}/{{.RepoInfo.Root}} git https://{{.Domain}}/{{.RepoInfo.Root}}" />
+    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .TargetName}}<meta name="go-source" content="{{.Domain}}/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
   </head>
   <body>
-    go get pkg.re/{{.RepoInfo.FullPath}}
+    go get {{.Domain}}/{{.RepoInfo.FullPath}}
   </body>
 </html>
 `))
@@ -101,6 +103,9 @@ var proxyClient *fasthttp.Client
 // daemonVersion is current morpher version
 var daemonVersion string
 
+// domain is main service domain
+var domain string
+
 // metrics contains morpher metrics
 var metrics = &Metrics{}
 
@@ -109,6 +114,7 @@ var metrics = &Metrics{}
 // Start starts HTTP server
 func Start(version string) error {
 	daemonVersion = version
+	domain = knf.GetS(MAIN_DOMAIN)
 
 	initHTTPClients()
 
@@ -219,6 +225,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		Path:       path,
 		TargetType: targetType,
 		TargetName: targetName,
+		Domain:     domain,
 	}
 
 	// Rewrite refs
