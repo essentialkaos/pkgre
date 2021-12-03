@@ -46,7 +46,7 @@ const (
 
 // Limits
 const (
-	MIN_PROCS = 1
+	MIN_PROCS = -1
 	MAX_PROCS = 32
 	MIN_PORT  = 1025
 	MAX_PORT  = 65535
@@ -132,9 +132,10 @@ func prepare() {
 	validateConfig()
 	setupLogger()
 
-	runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
-
-	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
+	if knf.GetI(MAIN_PROCS) > 0 {
+		log.Info("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
+		runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
+	}
 }
 
 // validateConfig validate config values
