@@ -64,7 +64,7 @@ Source0:            https://source.kaos.st/pkgre/%{name}-%{version}.tar.bz2
 
 BuildRoot:          %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:      golang >= 1.16
+BuildRequires:      golang >= 1.17
 
 Requires:           systemd
 
@@ -113,7 +113,7 @@ install -dm 755 %{buildroot}%{_unitdir}
 install -pm 644 %{src_dir}/common/morpher.service \
                 %{buildroot}%{_unitdir}/
 
-install -pm 755 %{src_dir}/common/morpher.logrotate \
+install -pm 644 %{src_dir}/common/morpher.logrotate \
                 %{buildroot}%{_sysconfdir}/logrotate.d/morpher
 
 %pre
@@ -158,6 +158,7 @@ rm -rf %{buildroot}
 - Dependencies updated to the latest versions
 - Added graceful shutdown
 - Added reuseport listener support
+- Added domain customization
 
 * Tue Jun 29 2021 Anton Novojilov <andy@essentialkaos.com> - 4.4.0-0
 - Dependencies updated to the latest versions
