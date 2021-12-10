@@ -66,7 +66,6 @@ type Metrics struct {
 	Redirects uint64
 	Docs      uint64
 	Goget     uint64
-	Cached    uint64
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -204,6 +203,14 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	if repoInfo.Target == "" {
+		ghURL := repoInfo.GitHubURL("")
+		atomic.AddUint64(&metrics.Redirects, 1)
+		log.Debug("Redirecting request to %s", ghURL)
+		redirectRequest(ctx, ghURL)
+		return
+	}
+
 	// Return rewritten pack
 	if repoInfo.Path == "git-upload-pack" {
 		processUploadPackRequest(ctx, start, repoInfo)
@@ -222,12 +229,9 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	targetType, targetName := suggestHead(repoInfo, refsInfo)
 	pkgInfo := &PkgInfo{
-		RepoInfo:   repoInfo,
-		RefsInfo:   refsInfo,
-		Path:       path,
-		TargetType: targetType,
-		TargetName: targetName,
-		Domain:     domain,
+		RepoInfo: repoInfo, RefsInfo: refsInfo,
+		TargetType: targetType, TargetName: targetName,
+		Path: path, Domain: domain,
 	}
 
 	// Rewrite refs

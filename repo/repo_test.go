@@ -123,6 +123,7 @@ func (s *RepoSuite) TestHelpers(c *C) {
 	c.Assert(info.GitHubRoot(), Equals, "github.com/essentialkaos/ek")
 	c.Assert(info.FullPath(), Equals, "essentialkaos/ek.v12.36.0/pid")
 	c.Assert(info.GitHubURL("v12.36.0"), Equals, "https://github.com/essentialkaos/ek/tree/v12.36.0/pid")
+	c.Assert(info.GitHubURL(""), Equals, "https://github.com/essentialkaos/ek")
 
 	info = &Info{Name: "test"}
 	c.Assert(info.Root(), Equals, "test")

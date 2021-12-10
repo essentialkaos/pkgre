@@ -108,6 +108,10 @@ func (i *Info) GitHubRoot() string {
 
 // GitHubURL returns URL of repository on github
 func (i *Info) GitHubURL(branchOrTag string) string {
+	if branchOrTag == "" {
+		return "https://" + i.GitHubRoot()
+	}
+
 	url := "https://" + i.GitHubRoot() + "/tree/" + branchOrTag
 
 	if i.Path != "" {
