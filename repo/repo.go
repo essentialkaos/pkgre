@@ -11,6 +11,8 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+
+	"pkg.re/essentialkaos/ek.v12/strutil"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -25,66 +27,47 @@ type Info struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-var userValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_-]{2,}`)
-var nameValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_.-]{2,}`)
-var pathValidationRegExp = regexp.MustCompile(`[A-Za-z0-9_.-/]{0,}`)
+var (
+	userValidationRegExp = regexp.MustCompile(`^[\w][\w\d_\-]+$`)
+	nameValidationRegExp = regexp.MustCompile(`^[\w\d_.\-]{2,}$`)
+	pathValidationRegExp = regexp.MustCompile(`^[\w\d_.\-\/]*$`)
+)
+
+var (
+	ErrUnsupportedURL = errors.New("Unsupported URL pattern")
+	ErrInvalidUser    = errors.New("Repository username is not valid")
+	ErrInvalidName    = errors.New("Repository name is not valid")
+	ErrInvalidPath    = errors.New("Repository path is not valid")
+)
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 // ParsePath parses given path to repo struct
 func ParsePath(path string) (*Info, error) {
-	if strings.Contains(path, ".git") {
-		path = strings.Replace(path, ".git", "", -1)
-	}
-
-	pathSlice := strings.Split(path, "/")
-
-	if len(pathSlice) <= 1 {
-		return nil, errors.New("Unsupported URL pattern")
-	}
-
 	var repoUser, repoName, repoTarget, repoPath string
 
+	if strings.HasSuffix(path, ".git") {
+		path = path[:len(path)-4]
+	}
+
+	if len(path) == 0 || path[0] != '/' || strings.Count(path, "/") == 0 {
+		return nil, ErrUnsupportedURL
+	}
+
+	// Remove leading slash
+	path = path[1:]
+
+	repoUser = strutil.ReadField(path, 0, false, "/")
+
 	// Check short notation (pkg.re/mgo or pkg.re/mgo.v1)
-	if strings.Contains(pathSlice[1], ".") || len(pathSlice) == 2 {
-		repoUser = ""
-		repoName = pathSlice[1]
-
-		if len(pathSlice) > 2 {
-			repoPath = strings.Join(pathSlice[2:], "/")
-		}
+	if strings.ContainsRune(repoUser, '.') || strings.Count(path, "/") == 0 {
+		repoPath = strutil.Exclude(path, repoUser)
+		repoName, repoTarget = parseNameAndTarget(repoUser)
+		repoUser = "go-" + repoName
 	} else {
-		repoUser = pathSlice[1]
-		repoName = pathSlice[2]
-
-		if len(pathSlice) > 3 {
-			repoPath = strings.Join(pathSlice[3:], "/")
-		}
-	}
-
-	dotIndex := strings.Index(repoName, ".")
-
-	if dotIndex != -1 {
-		repoTarget = repoName[dotIndex+1:]
-		repoName = repoName[:dotIndex]
-	}
-
-	if repoUser != "" {
-		if !userValidationRegExp.MatchString(repoUser) {
-			return nil, errors.New("Repo username is not valid")
-		}
-	}
-
-	if repoName != "" {
-		if !nameValidationRegExp.MatchString(repoName) {
-			return nil, errors.New("Repo name is not valid")
-		}
-	}
-
-	if repoPath != "" {
-		if !pathValidationRegExp.MatchString(repoPath) {
-			return nil, errors.New("Repo sub-path is not valid")
-		}
+		repoName = strutil.ReadField(path, 1, false, "/")
+		repoPath = strutil.Exclude(path, repoUser+"/"+repoName)
+		repoName, repoTarget = parseNameAndTarget(repoName)
 	}
 
 	return &Info{
@@ -97,36 +80,38 @@ func ParsePath(path string) (*Info, error) {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// GitHubRoot returns GitHub root path e.g. github.com/user/project
-func (i *Info) GitHubRoot() string {
-	if i.User == "" {
-		return "github.com/go-" + i.Name + "/" + i.Name
+// Validate validates repository info (user, name and path)
+func (i *Info) Validate() error {
+	if !userValidationRegExp.MatchString(i.User) {
+		return ErrInvalidUser
 	}
 
+	if !nameValidationRegExp.MatchString(i.Name) {
+		return ErrInvalidName
+	}
+
+	if i.Path != "" {
+		if !pathValidationRegExp.MatchString(i.Path) {
+			return ErrInvalidPath
+		}
+	}
+
+	return nil
+}
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
+// GitHubRoot returns GitHub root path e.g. github.com/user/project
+func (i *Info) GitHubRoot() string {
 	return "github.com/" + i.User + "/" + i.Name
 }
 
 // GitHubURL returns URL of repository on github
-func (i *Info) GitHubURL(branchOrName string) string {
-	url := "https://" + i.GitHubRoot()
-
-	if branchOrName != "" {
-		url += "/tree/" + branchOrName
-	}
+func (i *Info) GitHubURL(branchOrTag string) string {
+	url := "https://" + i.GitHubRoot() + "/tree/" + branchOrTag
 
 	if i.Path != "" {
-		url += "/" + i.Path
-	}
-
-	return url
-}
-
-// GoDevURL returns URL of pkg.go.dev page with package documentation
-func (i *Info) GoDevURL(path, branchOrName string) string {
-	url := "https://pkg.go.dev/pkg.re/" + path + "@" + branchOrName
-
-	if !strings.HasPrefix(branchOrName, "v1.") && !strings.HasPrefix(branchOrName, "v0.") {
-		url += "+incompatible"
+		url += i.Path
 	}
 
 	return url
@@ -150,8 +135,20 @@ func (i *Info) Root() string {
 // FullPath returns full path e.g. user/project.target/some/part
 func (i *Info) FullPath() string {
 	if i.Path != "" {
-		return i.Root() + "/" + i.Path
+		return i.Root() + i.Path
 	}
 
 	return i.Root()
+}
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
+func parseNameAndTarget(name string) (string, string) {
+	if !strings.ContainsRune(name, '.') {
+		return name, ""
+	}
+
+	separator := strings.IndexRune(name, '.')
+
+	return name[:separator], name[separator+1:]
 }

@@ -31,7 +31,7 @@ deps: git-config dep-update ## Download dependencies
 deps-test: deps ## Download dependencies for tests
 
 test: ## Run tests
-	go test -covermode=count ./refs
+	go test -covermode=count ./refs ./repo
 
 gen-fuzz: ## Generate archives for fuzz testing
 	which go-fuzz-build &>/dev/null || go get -u -v github.com/dvyukov/go-fuzz/go-fuzz-build

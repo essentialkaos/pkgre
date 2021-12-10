@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -65,6 +66,7 @@ type Metrics struct {
 	Redirects uint64
 	Docs      uint64
 	Goget     uint64
+	Cached    uint64
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -242,7 +244,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Redirect to pkg.go.dev
 	if ctx.QueryArgs().Has(DOC_QUERY_ARG) {
-		processDocsRequest(ctx, start, path, repoInfo, pkgInfo)
+		processDocsRequest(ctx, start, path, pkgInfo)
 		return
 	}
 
@@ -271,23 +273,21 @@ func processBasicRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	appendProcHeader(ctx, start)
 
-	data := "{\n"
-	data += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Hits), 10) + ",\n"
-	data += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Misses), 10) + ",\n"
-	data += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Errors), 10) + ",\n"
-	data += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Redirects), 10) + ",\n"
-	data += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Docs), 10) + ",\n"
-	data += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Goget), 10) + "\n"
-	data += "}\n"
-
-	ctx.WriteString(data)
+	ctx.WriteString("{\n")
+	ctx.WriteString("  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Hits), 10) + ",\n")
+	ctx.WriteString("  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Misses), 10) + ",\n")
+	ctx.WriteString("  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Errors), 10) + ",\n")
+	ctx.WriteString("  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Redirects), 10) + ",\n")
+	ctx.WriteString("  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Docs), 10) + ",\n")
+	ctx.WriteString("  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Goget), 10) + "\n")
+	ctx.WriteString("}\n")
 }
 
 // processDocsRequest redirects request to godoc.org
-func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, repoInfo *repo.Info, pkgInfo *PkgInfo) {
+func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, pkgInfo *PkgInfo) {
 	atomic.AddUint64(&metrics.Docs, 1)
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, repoInfo.GoDevURL(path, pkgInfo.TargetName))
+	redirectRequest(ctx, genGoDevURL(path, pkgInfo.TargetName))
 }
 
 // processUploadPackRequest redirects git-upload-pack request to GitHub
@@ -504,4 +504,15 @@ func getRealIP(ctx *fasthttp.RequestCtx) string {
 	}
 
 	return ctx.RemoteIP().String()
+}
+
+// genGoDevURL returns URL of pkg.go.dev page with package documentation
+func genGoDevURL(path, branchOrTag string) string {
+	url := "https://pkg.go.dev/" + domain + "/" + path + "@" + branchOrTag
+
+	if !strings.HasPrefix(branchOrTag, "v1.") && !strings.HasPrefix(branchOrTag, "v0.") {
+		url += "+incompatible"
+	}
+
+	return url
 }
