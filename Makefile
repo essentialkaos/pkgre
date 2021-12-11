@@ -28,7 +28,7 @@ uninstall: ## Uninstall all binaries
 git-config: ## Configure git redirects for stable import path services
 	git config --global http.https://pkg.re.followRedirects true
 
-deps: git-config mod-download ## Download dependencies
+deps: git-config mod-update ## Download dependencies
 
 deps-test: deps ## Download dependencies for tests
 
