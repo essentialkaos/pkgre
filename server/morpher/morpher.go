@@ -197,7 +197,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if err != nil {
 		atomic.AddUint64(&metrics.Errors, 1)
-		log.Warn("Can't parse repository path: %v", err)
+		log.Warn("Can't parse repository path (%s): %v", path, err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
 		return
