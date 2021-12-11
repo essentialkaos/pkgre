@@ -28,6 +28,7 @@ git-config: ## Configure git redirects for stable import path services
 
 deps: git-config ## Download dependencies
 	go get -d -v github.com/valyala/fasthttp
+	go get -d -v github.com/valyala/tcplisten
 	go get -d -v pkg.re/essentialkaos/ek.v12
 
 deps-test: git-config ## Download dependencies for tests
