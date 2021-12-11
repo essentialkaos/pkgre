@@ -207,7 +207,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if err != nil {
 		atomic.AddUint64(&metrics.Errors, 1)
-		log.Warn("Repository path validation error: %v", err)
+		log.Warn("Repository path validation error (%s): %v", path, err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
 		return
