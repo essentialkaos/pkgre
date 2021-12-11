@@ -70,6 +70,8 @@ func ParsePath(path string) (*Info, error) {
 		repoName, repoTarget = parseNameAndTarget(repoName)
 	}
 
+	repoPath = strings.TrimLeft(repoPath, "/")
+
 	return &Info{
 		User:   repoUser,
 		Name:   repoName,
@@ -115,7 +117,7 @@ func (i *Info) GitHubURL(branchOrTag string) string {
 	url := "https://" + i.GitHubRoot() + "/tree/" + branchOrTag
 
 	if i.Path != "" {
-		url += i.Path
+		url += "/" + i.Path
 	}
 
 	return url
@@ -139,7 +141,7 @@ func (i *Info) Root() string {
 // FullPath returns full path e.g. user/project.target/some/part
 func (i *Info) FullPath() string {
 	if i.Path != "" {
-		return i.Root() + i.Path
+		return i.Root() + "/" + i.Path
 	}
 
 	return i.Root()

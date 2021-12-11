@@ -44,7 +44,7 @@ func (s *RepoSuite) TestParsePath(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(info.User, Equals, "essentialkaos")
 	c.Assert(info.Name, Equals, "ek")
-	c.Assert(info.Path, Equals, "/knf/validators/regexp")
+	c.Assert(info.Path, Equals, "knf/validators/regexp")
 	c.Assert(info.Target, Equals, "v12.34.1")
 	c.Assert(info.Validate(), IsNil)
 
@@ -64,7 +64,7 @@ func (s *RepoSuite) TestParsePath(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(info.User, Equals, "or-ga-ni-za-tion-6")
 	c.Assert(info.Name, Equals, "mySupper_REPO")
-	c.Assert(info.Path, Equals, "/a/b/c/d")
+	c.Assert(info.Path, Equals, "a/b/c/d")
 	c.Assert(info.Target, Equals, "v12.0.1")
 	c.Assert(info.Validate(), IsNil)
 
@@ -74,7 +74,7 @@ func (s *RepoSuite) TestParsePath(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(info.User, Equals, "go-yaml")
 	c.Assert(info.Name, Equals, "yaml")
-	c.Assert(info.Path, Equals, "/parser")
+	c.Assert(info.Path, Equals, "parser")
 	c.Assert(info.Target, Equals, "v5")
 	c.Assert(info.Validate(), IsNil)
 
