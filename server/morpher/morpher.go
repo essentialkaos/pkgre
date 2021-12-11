@@ -197,7 +197,17 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if err != nil {
 		atomic.AddUint64(&metrics.Errors, 1)
-		log.Warn("Can't parse repo path: %v", err)
+		log.Warn("Can't parse repository path: %v", err)
+		appendProcHeader(ctx, start)
+		notFoundResponse(ctx, err.Error())
+		return
+	}
+
+	err = repoInfo.Validate()
+
+	if err != nil {
+		atomic.AddUint64(&metrics.Errors, 1)
+		log.Warn("Repository path validation error: %v", err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
 		return
