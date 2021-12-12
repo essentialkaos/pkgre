@@ -28,7 +28,7 @@ type Info struct {
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 var (
-	userValidationRegExp = regexp.MustCompile(`^[\w][\w\d_\-]+$`)
+	userValidationRegExp = regexp.MustCompile(`^[a-zA-Z0-9][\w\d_\-]+$`)
 	nameValidationRegExp = regexp.MustCompile(`^[\w\d_.\-]{2,}$`)
 	pathValidationRegExp = regexp.MustCompile(`^[\w\d_.\-\/]*$`)
 )
