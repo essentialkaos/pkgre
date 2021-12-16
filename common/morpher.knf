@@ -1,20 +1,26 @@
-# Default config for morpher server (part of pkg.re service)
+# Default configuration for morpher server (part of pkg.re service)
 
 [main]
 
-  # Number of procs
-  procs: 4
+  # Maximum number of processes
+  procs: -1
+
+  # Main service domain
+  domain: pkg.re
 
 [http]
 
-  # HTTP server ip
+  # HTTP server IP
   ip:
 
   # HTTP server port
   port: 39000
 
   # URL for redirect non-system request
-  redirect: https://pkg.re
+  redirect: https://{main:domain}
+
+  # Use reuseport listener for HTTP server
+  reuseport: false
 
 [healthcheck]
 
@@ -34,4 +40,3 @@
 
   # Defaul log permissions 
   perms: 0644
-

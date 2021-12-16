@@ -8,7 +8,6 @@ package server
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -23,6 +22,7 @@ import (
 
 	knfv "pkg.re/essentialkaos/ek.v12/knf/validators"
 	knff "pkg.re/essentialkaos/ek.v12/knf/validators/fs"
+	knfn "pkg.re/essentialkaos/ek.v12/knf/validators/network"
 
 	"github.com/essentialkaos/pkgre/server/healthcheck"
 	"github.com/essentialkaos/pkgre/server/morpher"
@@ -33,7 +33,7 @@ import (
 // Application info
 const (
 	APP  = "PkgRE Morpher Server"
-	VER  = "4.4.0"
+	VER  = "5.0.0"
 	DESC = "HTTP Server for morphing go get requests"
 )
 
@@ -47,7 +47,7 @@ const (
 
 // Limits
 const (
-	MIN_PROCS = 1
+	MIN_PROCS = -1
 	MAX_PROCS = 32
 	MIN_PORT  = 1025
 	MAX_PORT  = 65535
@@ -56,9 +56,11 @@ const (
 // Configuration file properties names
 const (
 	MAIN_PROCS      = "main:procs"
+	MAIN_DOMAIN     = "main:domain"
 	HTTP_IP         = "http:ip"
 	HTTP_PORT       = "http:port"
 	HTTP_REDIRECT   = "http:redirect"
+	HTTP_REUSEPORT  = "http:reuseport"
 	HEALTHCHECK_URL = "healthcheck:url"
 	LOG_LEVEL       = "log:level"
 	LOG_DIR         = "log:dir"
@@ -132,19 +134,31 @@ func prepare() {
 	validateConfig()
 	setupLogger()
 
-	runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
-
-	log.Debug("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
+	if knf.GetI(MAIN_PROCS) > 0 {
+		log.Info("GOMAXPROCS set to %d", knf.GetI(MAIN_PROCS))
+		runtime.GOMAXPROCS(knf.GetI(MAIN_PROCS))
+	}
 }
 
 // validateConfig validate config values
 func validateConfig() {
 	errs := knf.Validate([]*knf.Validator{
+		{MAIN_DOMAIN, knfv.Empty, nil},
+		{HTTP_REDIRECT, knfv.Empty, nil},
+
 		{MAIN_PROCS, knfv.Less, MIN_PROCS},
 		{MAIN_PROCS, knfv.Greater, MAX_PROCS},
 		{HTTP_PORT, knfv.Less, MIN_PORT},
 		{HTTP_PORT, knfv.Greater, MAX_PORT},
+
+		{HTTP_REDIRECT, knfn.URL, nil},
+		{HEALTHCHECK_URL, knfn.URL, nil},
+
 		{LOG_DIR, knff.Perms, "DWX"},
+
+		{LOG_LEVEL, knfv.NotContains, []string{
+			"debug", "info", "warn", "error", "crit",
+		}},
 	})
 
 	if len(errs) != 0 {
@@ -188,12 +202,12 @@ func start() {
 	}
 }
 
-// printError print error message
-func printError(message string, args ...interface{}) {
-	if len(args) == 0 {
-		fmtc.Printf("{r}%s{!}\n", message)
+// printError prints error message to console
+func printError(f string, a ...interface{}) {
+	if len(a) == 0 {
+		fmtc.Fprintln(os.Stderr, "{r}"+f+"{!}")
 	} else {
-		fmtc.Printf("{r}%s{!}\n", fmt.Sprintf(message, args...))
+		fmtc.Fprintf(os.Stderr, "{r}"+f+"{!}\n", a...)
 	}
 }
 
@@ -210,12 +224,26 @@ func exit(code int) {
 // INT signal handler
 func intSignalHandler() {
 	log.Aux("Received INT signal, shutdown...")
+
+	err := morpher.Stop()
+
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 	exit(0)
 }
 
 // TERM signal handler
 func termSignalHandler() {
 	log.Aux("Received TERM signal, shutdown...")
+
+	err := morpher.Stop()
+
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 	exit(0)
 }
 

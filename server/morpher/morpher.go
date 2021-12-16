@@ -11,9 +11,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -27,14 +29,17 @@ import (
 	"github.com/essentialkaos/pkgre/repo"
 
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/reuseport"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 const (
-	HTTP_IP       = "http:ip"
-	HTTP_PORT     = "http:port"
-	HTTP_REDIRECT = "http:redirect"
+	MAIN_DOMAIN    = "main:domain"
+	HTTP_IP        = "http:ip"
+	HTTP_PORT      = "http:port"
+	HTTP_REDIRECT  = "http:redirect"
+	HTTP_REUSEPORT = "http:reuserport"
 )
 
 const USER_AGENT = "PkgRE-Morpher"
@@ -47,6 +52,7 @@ const DOC_QUERY_ARG = "docs"
 type PkgInfo struct {
 	Path       string
 	TargetName string
+	Domain     string
 	RepoInfo   *repo.Info
 	RefsInfo   *refs.Info
 	TargetType refs.RefType
@@ -77,14 +83,17 @@ var majorVerRegExp = regexp.MustCompile(`^[a-zA-Z]{0,}([0-9]{1}.*)`)
 // goGetTemplate is template used for go get command response
 var goGetTemplate = template.Must(template.New("").Parse(`<html>
   <head>
-    <meta name="go-import" content="pkg.re/{{.RepoInfo.Root}} git https://pkg.re/{{.RepoInfo.Root}}" />
-    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .TargetName}}<meta name="go-source" content="pkg.re/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
+    <meta name="go-import" content="{{.Domain}}/{{.RepoInfo.Root}} git https://{{.Domain}}/{{.RepoInfo.Root}}" />
+    {{$root := .RepoInfo.GitHubRoot}}{{$tree := .TargetName}}<meta name="go-source" content="{{.Domain}}/{{.RepoInfo.Root}} _ https://{{$root}}/tree/{{$tree}}{/dir} https://{{$root}}/blob/{{$tree}}{/dir}/{file}#L{line}" />
   </head>
   <body>
-    go get pkg.re/{{.RepoInfo.FullPath}}
+    go get {{.Domain}}/{{.RepoInfo.FullPath}}
   </body>
 </html>
 `))
+
+// server is main HTTP server
+var server *fasthttp.Server
 
 // client is default client for all http requests
 var client *fasthttp.Client
@@ -95,24 +104,58 @@ var proxyClient *fasthttp.Client
 // daemonVersion is current morpher version
 var daemonVersion string
 
+// domain is main service domain
+var domain string
+
 // metrics contains morpher metrics
 var metrics = &Metrics{}
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
-// Start start HTTP server
+// Start starts HTTP server
 func Start(version string) error {
 	daemonVersion = version
+	domain = knf.GetS(MAIN_DOMAIN)
 
 	initHTTPClients()
 
-	log.Info("Morpher HTTP server will be started on %s:%s", knf.GetS(HTTP_IP), knf.GetS(HTTP_PORT))
+	addr := knf.GetS(HTTP_IP) + ":" + knf.GetS(HTTP_PORT)
 
-	return fasthttp.ListenAndServe(knf.GetS(HTTP_IP)+":"+knf.GetS(HTTP_PORT), requestHandler)
+	log.Info("Morpher HTTP server will be started on %s", addr)
+
+	server = &fasthttp.Server{
+		Name:    USER_AGENT + "/" + daemonVersion,
+		Handler: requestHandler,
+	}
+
+	var err error
+	var ln net.Listener
+
+	if knf.GetB(HTTP_REUSEPORT, false) {
+		ln, err = net.Listen("tcp4", addr)
+	} else {
+		ln, err = reuseport.Listen("tcp4", addr)
+	}
+
+	if err != nil {
+		return fmt.Errorf("Can't create listener on %s: %v", addr, err)
+	}
+
+	return server.Serve(ln)
+}
+
+// Stop stops HTTP server
+func Stop() error {
+	if server == nil {
+		return nil
+	}
+
+	return server.Shutdown()
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// initHTTPClients initializes basic clients
 func initHTTPClients() {
 	client = &fasthttp.Client{
 		Name:                USER_AGENT + "/" + daemonVersion,
@@ -131,6 +174,7 @@ func initHTTPClients() {
 	}
 }
 
+// requestHandler is a main request handler
 func requestHandler(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
 
@@ -153,9 +197,27 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if err != nil {
 		atomic.AddUint64(&metrics.Errors, 1)
-		log.Warn("Can't parse repo path: %v", err)
+		log.Warn("Can't parse repository path (%s): %v", path, err)
 		appendProcHeader(ctx, start)
 		notFoundResponse(ctx, err.Error())
+		return
+	}
+
+	err = repoInfo.Validate()
+
+	if err != nil {
+		atomic.AddUint64(&metrics.Errors, 1)
+		log.Warn("Repository path validation error (%s): %v", path, err)
+		appendProcHeader(ctx, start)
+		notFoundResponse(ctx, err.Error())
+		return
+	}
+
+	if repoInfo.Target == "" {
+		ghURL := repoInfo.GitHubURL("")
+		atomic.AddUint64(&metrics.Redirects, 1)
+		log.Debug("Redirecting request to %s", ghURL)
+		redirectRequest(ctx, ghURL)
 		return
 	}
 
@@ -177,11 +239,9 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	targetType, targetName := suggestHead(repoInfo, refsInfo)
 	pkgInfo := &PkgInfo{
-		RepoInfo:   repoInfo,
-		RefsInfo:   refsInfo,
-		Path:       path,
-		TargetType: targetType,
-		TargetName: targetName,
+		RepoInfo: repoInfo, RefsInfo: refsInfo,
+		TargetType: targetType, TargetName: targetName,
+		Path: path, Domain: domain,
 	}
 
 	// Rewrite refs
@@ -198,7 +258,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	// Redirect to pkg.go.dev
 	if ctx.QueryArgs().Has(DOC_QUERY_ARG) {
-		processDocsRequest(ctx, start, path, repoInfo, pkgInfo)
+		processDocsRequest(ctx, start, path, pkgInfo)
 		return
 	}
 
@@ -223,30 +283,28 @@ func processBasicRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	redirectRequest(ctx, knf.GetS(HTTP_REDIRECT))
 }
 
-// processMetricsRequest return metrics
+// processMetricsRequest writes metrics response
 func processMetricsRequest(ctx *fasthttp.RequestCtx, start time.Time) {
 	appendProcHeader(ctx, start)
 
-	data := "{\n"
-	data += "  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Hits), 10) + ",\n"
-	data += "  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Misses), 10) + ",\n"
-	data += "  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Errors), 10) + ",\n"
-	data += "  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Redirects), 10) + ",\n"
-	data += "  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Docs), 10) + ",\n"
-	data += "  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Goget), 10) + "\n"
-	data += "}\n"
-
-	ctx.WriteString(data)
+	ctx.WriteString("{\n")
+	ctx.WriteString("  \"hits\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Hits), 10) + ",\n")
+	ctx.WriteString("  \"misses\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Misses), 10) + ",\n")
+	ctx.WriteString("  \"errors\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Errors), 10) + ",\n")
+	ctx.WriteString("  \"redirects\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Redirects), 10) + ",\n")
+	ctx.WriteString("  \"docs\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Docs), 10) + ",\n")
+	ctx.WriteString("  \"goget\": " + strconv.FormatUint(atomic.LoadUint64(&metrics.Goget), 10) + "\n")
+	ctx.WriteString("}\n")
 }
 
-// processDocsRequest redirect request to godoc.org
-func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, repoInfo *repo.Info, pkgInfo *PkgInfo) {
+// processDocsRequest redirects request to godoc.org
+func processDocsRequest(ctx *fasthttp.RequestCtx, start time.Time, path string, pkgInfo *PkgInfo) {
 	atomic.AddUint64(&metrics.Docs, 1)
 	appendProcHeader(ctx, start)
-	redirectRequest(ctx, repoInfo.GoDevURL(path, pkgInfo.TargetName))
+	redirectRequest(ctx, genGoDevURL(path, pkgInfo.TargetName))
 }
 
-// processUploadPackRequest redirect git-upload-pack request to GitHub
+// processUploadPackRequest redirects git-upload-pack request to GitHub
 func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInfo *repo.Info) {
 	appendProcHeader(ctx, start)
 
@@ -256,7 +314,7 @@ func processUploadPackRequest(ctx *fasthttp.RequestCtx, start time.Time, repoInf
 	proxyRequest(ctx, url)
 }
 
-// processRefsRequest process request for refs
+// processRefsRequest processes request for refs
 func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
 	if pkgInfo.TargetName != "" {
 		switch pkgInfo.TargetType {
@@ -286,7 +344,7 @@ func processRefsRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgI
 	ctx.Write(pkgInfo.RefsInfo.Rewrite(pkgInfo.TargetName, pkgInfo.TargetType))
 }
 
-// processGoGetRequest process "go get" requests
+// processGoGetRequest processes "go get" requests
 func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *PkgInfo) {
 	appendProcHeader(ctx, start)
 
@@ -313,25 +371,25 @@ func processGoGetRequest(ctx *fasthttp.RequestCtx, start time.Time, pkgInfo *Pkg
 	atomic.AddUint64(&metrics.Goget, 1)
 }
 
-// notFoundResponse write 404 response
+// notFoundResponse writes 404 response
 func notFoundResponse(ctx *fasthttp.RequestCtx, data string) {
 	ctx.SetStatusCode(http.StatusNotFound)
 	ctx.WriteString(data + "\n")
 }
 
-// appendProcHeader append header with processing time
+// appendProcHeader appends header with processing time
 func appendProcHeader(ctx *fasthttp.RequestCtx, start time.Time) {
 	ctx.Response.Header.Set("Server", "PKGRE Morpher")
 	ctx.Response.Header.Add("X-Morpher-Time", fmt.Sprintf("%s", time.Since(start)))
 }
 
-// redirectRequest add redirect header to repsponse
+// redirectRequest appends redirect header to response
 func redirectRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Set("Location", url)
 	ctx.SetStatusCode(http.StatusTemporaryRedirect)
 }
 
-// proxyRequest proxy request to GitHub
+// proxyRequest proxies request to GitHub
 func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Request.Header.Del("Connection")
 	ctx.Request.SetRequestURI(url)
@@ -345,7 +403,7 @@ func proxyRequest(ctx *fasthttp.RequestCtx, url string) {
 	ctx.Response.Header.Del("Connection")
 }
 
-// requestRecover recover panic in request
+// requestRecover recovers panic in request
 func requestRecover(ctx *fasthttp.RequestCtx, start time.Time) {
 	r := recover()
 
@@ -381,7 +439,7 @@ func fetchRefs(repo *repo.Info) (*refs.Info, error) {
 	return refs, nil
 }
 
-// suggestHead return best fit head
+// suggestHead returns best fit head
 func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string) {
 	// If target is empty we do not change refs head
 	if repoInfo.Target == "" {
@@ -440,7 +498,7 @@ func suggestHead(repoInfo *repo.Info, refsInfo *refs.Info) (refs.RefType, string
 	return refs.TYPE_UNKNOWN, ""
 }
 
-// getCleanVer return only version digits without any prefix (v/r/ver/version/etc...)
+// getCleanVer returns version digits without any prefix (v/r/ver/version/etc...)
 func getCleanVer(v string) string {
 	vf := majorVerRegExp.FindStringSubmatch(v)
 
@@ -460,4 +518,15 @@ func getRealIP(ctx *fasthttp.RequestCtx) string {
 	}
 
 	return ctx.RemoteIP().String()
+}
+
+// genGoDevURL returns URL of pkg.go.dev page with package documentation
+func genGoDevURL(path, branchOrTag string) string {
+	url := "https://pkg.go.dev/" + domain + "/" + path + "@" + branchOrTag
+
+	if !strings.HasPrefix(branchOrTag, "v1.") && !strings.HasPrefix(branchOrTag, "v0.") {
+		url += "+incompatible"
+	}
+
+	return url
 }
