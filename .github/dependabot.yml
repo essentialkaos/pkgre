@@ -8,6 +8,8 @@ updates:
       interval: "daily"
       timezone: "Europe/Moscow"
       time: "06:00"
+    labels:
+      - "PR • MAINTENANCE"
     assignees:
       - "andyone"
     reviewers:
@@ -17,3 +19,5 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - "PR • MAINTENANCE"
