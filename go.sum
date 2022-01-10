@@ -37,5 +37,5 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EV
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
 pkg.re/essentialkaos/check.v1 v1.0.0 h1:2V++mhtm9yHqvW7gtXqcU1D+98vTICGnXmaZloLsZVY=
 pkg.re/essentialkaos/check.v1 v1.0.0/go.mod h1:B7CoMnGFRnruw7X2Z45kWNvoCW+5OhUsLUm1EBM1aJs=
-pkg.re/essentialkaos/ek.v12 v12.37.0+incompatible h1:0S62sdzOwO//dXYoS06tIjG2gsI2iLmyLn9U55Gyzf8=
-pkg.re/essentialkaos/ek.v12 v12.37.0+incompatible/go.mod h1:snX86CJXqEOkJJTuXSwr11oZg3P6ZBWXh5L1fK8jqrA=
+pkg.re/essentialkaos/ek.v12 v12.39.1+incompatible h1:SoacHMUXqXQvyGQpxgYowYiUMWY1oCCe/eLXGx7WHc4=
+pkg.re/essentialkaos/ek.v12 v12.39.1+incompatible/go.mod h1:snX86CJXqEOkJJTuXSwr11oZg3P6ZBWXh5L1fK8jqrA=
