@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/valyala/fasthttp v1.33.0
 	pkg.re/essentialkaos/check.v1 v1.0.0
-	pkg.re/essentialkaos/ek.v12 v12.39.1+incompatible
+	pkg.re/essentialkaos/ek.v12 v12.40.0+incompatible
 )
 
 require (
