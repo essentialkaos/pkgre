@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/valyala/fasthttp v1.33.0
-	pkg.re/essentialkaos/check.v1 v1.1.0
+	pkg.re/essentialkaos/check.v1 v1.2.0
 	pkg.re/essentialkaos/ek.v12 v12.41.0+incompatible
 )
 
@@ -17,5 +17,4 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
