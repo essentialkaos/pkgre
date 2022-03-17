@@ -8,14 +8,6 @@
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
 
-<p align="center">
-  <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/sKjRtflJ-2/server.svg" /></a>
-  <a href="#"><img src="https://healthchecks.io/badge/6f454deb-5215-40aa-933f-f91a8e579a07/2FbciL3K-2/morpher.svg" /></a>
-  <a href="https://status.pkg.re"><img src="https://status.kaos.io/q7j0/status.svg" /></a>
-  <a href="https://status.pkg.re"><img src="https://status.kaos.io/q7j0/uptime.svg" /></a>
-  <a href="https://status.pkg.re"><img src="https://status.kaos.io/q7j0/apdex.svg" /></a>
-</p>
-
 <p align="center"><a href="#routing-examples">Routing examples</a> • <a href="#contributing">Contributing</a> • <a href="#license">License</a></p>
 
 <br/>
